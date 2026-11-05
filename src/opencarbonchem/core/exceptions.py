@@ -88,6 +88,10 @@ class DoubleCountingError(OpenCarbonChemError):
     """The same emission contribution would be counted twice."""
 
 
+class PCFError(OpenCarbonChemError):
+    """A product definition, life-cycle stage or inventory item is invalid."""
+
+
 class AllocationError(OpenCarbonChemError):
     """Allocation bases do not sum to unity, or a basis is not supported."""
 

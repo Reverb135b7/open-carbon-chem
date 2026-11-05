@@ -8,8 +8,9 @@ uncertainty analysis and decarbonisation scenario modelling. The calculation
 engine is independent of any user interface and every reported number carries
 the activity record, emission factor and GWP set that produced it.
 
-> **Status:** early development (v0.1.0). Milestones 1–4 are complete and
-> tested; Scope 1/2 and the Scope 3 catalogue are implemented (see
+> **Status:** early development (v0.1.0). Milestones 1–6 are complete and
+> tested (125 tests); Scope 1/2/3 corporate accounting and Product Carbon
+> Footprints are implemented (see
 > [`docs/architecture.md`](docs/architecture.md) for the roadmap). Not yet
 > certified, verified or conformant with any standard — it implements
 > calculation methodologies consistent with the GHG Protocol and ISO 14064/14067.
@@ -26,6 +27,11 @@ the activity record, emission factor and GWP set that produced it.
 - **Corporate GHG accounting** — Scope 1 (stationary, mobile, fugitive,
   process), Scope 2 (location-based always; market-based only with explicit
   contract factors), and the full 15-category Scope 3 catalogue.
+- **Product Carbon Footprint (PCF)** — product definition, reference flow,
+  cradle-to-gate / cradle-to-grave boundary enforcement, eight life-cycle
+  stages, mass / economic / physical-causality allocation, and a footprint
+  expressed per functional unit. Rows shared with the corporate inventory are
+  cross-checked so the two workflows cannot double count.
 - **Audit trail** — every `EmissionResult` records AD, EF, factor ID, gas,
   GWP and GWP set; SQLite schema keeps row-level results for reconciliation.
 - **Corporate boundary & comparison** — documentable organisational boundary
@@ -86,7 +92,8 @@ src/opencarbonchem/
   factors/    models.py, registry.py, data/illustrative_factors.csv
   accounting/ scope1-3, boundary, aggregate, comparison
   database/   schema.sql, store.py
-  pcf/ analytics/ scenarios/ reporting/   (pending milestones)
+  pcf/                          # Product Carbon Footprint (milestone 6)
+  analytics/ scenarios/ reporting/   (pending milestones)
 data/       activities_synthetic.csv      # demo dataset (synthetic)
 docs/       architecture.md               # plan of record: requirements, schema, roadmap
 tests/      unit + integration tests
@@ -120,8 +127,8 @@ reports/    generated output
 | 2 Database schemas & activity data | done |
 | 3 Emission factor DB & unit conversion | done |
 | 4 Core calculation engine | done |
-| 5 | Corporate GHG accounting | done |
-| 6 Product carbon footprint | pending |
+| 5 Corporate GHG accounting | done |
+| 6 Product carbon footprint | done |
 | 7 Hotspot / sensitivity / Monte Carlo | pending |
 | 8 Decarbonisation scenarios | pending |
 | 9 Streamlit dashboard | pending |

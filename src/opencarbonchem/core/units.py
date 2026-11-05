@@ -418,6 +418,8 @@ class Quantity:
         if not math.isfinite(self.value):
             raise ValueError("Quantity value must be finite")
         object.__setattr__(self, "value", float(self.value))
+        if isinstance(self.unit, str):
+            object.__setattr__(self, "unit", default_registry().parse(self.unit))
 
     @classmethod
     def of(cls, value: float, unit: str | Unit, label: str | None = None) -> "Quantity":
