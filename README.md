@@ -143,7 +143,7 @@ reports/    generated output
 | 7 Hotspot / sensitivity / Monte Carlo | pending |
 | 8 Decarbonisation scenarios | pending |
 | 9 Streamlit dashboard | pending |
-| 10 PDF/Excel reporting & docs | pending |
+| 10 PDF/Excel reporting & docs | done |
 | 11 Final integration & publication | pending |
 
 ## License
