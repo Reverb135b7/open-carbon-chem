@@ -251,7 +251,7 @@ Rules:
 | 3 | Emission factor database and unit conversion | **Done** (unit engine, FactorRegistry, provenanced seed CSV) |
 | 4 | Core calculation engine | **Done** (GWP sets, E = AD × EF, CO2e, audit results, tests) |
 | 5 | Corporate GHG accounting | **Done** (Scope 1/2/3 catalogue, `OrganisationalBoundary` + consolidation, `OrganizationReport` reconciliation, `PeriodComparison`, boundary persistence) |
-| 6 | Product Carbon Footprint | Pending |
+| 6 | Product Carbon Footprint | **Done** (stage catalogue + boundary rules, `ProductDefinition`, `InventoryItem`, mass/economic/physical-causality/none allocation, PCF = Σ attributable CO2e / reference flow, double-counting guard vs corporate report, SQLite persistence, 28 tests) |
 | 7 | Hotspot, sensitivity and uncertainty analysis | Pending |
 | 8 | Decarbonisation scenario modelling | Pending |
 | 9 | Streamlit interface | Pending |

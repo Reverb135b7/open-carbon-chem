@@ -139,6 +139,7 @@ CREATE TABLE IF NOT EXISTS allocation_rules (
     stage        TEXT NOT NULL,
     method       TEXT NOT NULL CHECK (method IN ('mass', 'economic', 'physical_causality', 'none')),
     basis_value  REAL,
+    basis_total  REAL,
     basis_unit   TEXT,
     notes        TEXT NOT NULL DEFAULT ''
 );

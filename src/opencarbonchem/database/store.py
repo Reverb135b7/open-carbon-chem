@@ -15,9 +15,12 @@ from typing import Iterable
 from ..accounting.base import ScopeResult
 from ..accounting.boundary import BoundaryEntity, OrganisationalBoundary
 from ..core.activity import ActivityRecord
-from ..core.exceptions import BoundaryError
+from ..core.exceptions import BoundaryError, PCFError
 from ..core.calc import EmissionResult
 from ..factors.models import EmissionFactor
+from ..pcf.allocation import AllocationRule
+from ..pcf.calculator import PCFLineItem, PCFResult
+from ..pcf.models import ProductDefinition
 
 __all__ = ["CarbonDatabase"]
 
@@ -36,6 +39,7 @@ class CarbonDatabase:
     def init_schema(self) -> None:
         """Execute the packaged DDL (idempotent, upgrades older databases)."""
         self._conn.executescript(_SCHEMA.read_text(encoding="utf-8"))
+        self._migrate()
         # Databases created before milestone 5 lack facilities.equity_share.
         columns = {
             row["name"] for row in self._conn.execute("PRAGMA table_info(facilities)")
@@ -45,6 +49,15 @@ class CarbonDatabase:
                 "ALTER TABLE facilities ADD COLUMN equity_share REAL NOT NULL DEFAULT 1.0"
             )
         self._conn.commit()
+
+    def _migrate(self) -> None:
+        """Bring databases created by earlier milestones up to the current schema."""
+        allocation_columns = {
+            row["name"]
+            for row in self._conn.execute("PRAGMA table_info(allocation_rules)")
+        }
+        if "basis_total" not in allocation_columns:
+            self._conn.execute("ALTER TABLE allocation_rules ADD COLUMN basis_total REAL")
 
     # -- emission factors --------------------------------------------------- #
     def save_factor(self, factor: EmissionFactor) -> None:
@@ -56,6 +69,22 @@ class CarbonDatabase:
                 source_reference, version, uncertainty_pct, review_status,
                 methane_basis, notes
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(factor_id) DO UPDATE SET
+                activity_category = excluded.activity_category,
+                substance = excluded.substance,
+                value = excluded.value,
+                unit = excluded.unit,
+                gas = excluded.gas,
+                gases_covered = excluded.gases_covered,
+                geography = excluded.geography,
+                reporting_year = excluded.reporting_year,
+                source_org = excluded.source_org,
+                source_reference = excluded.source_reference,
+                version = excluded.version,
+                uncertainty_pct = excluded.uncertainty_pct,
+                review_status = excluded.review_status,
+                methane_basis = excluded.methane_basis,
+                notes = excluded.notes
             """,
             (
                 factor.factor_id, factor.activity_category, factor.substance,
@@ -77,6 +106,21 @@ class CarbonDatabase:
                 methane_basis, geography, data_type, period_start, period_end,
                 description, notes
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                period_id = excluded.period_id,
+                scope = excluded.scope,
+                category = excluded.category,
+                substance = excluded.substance,
+                quantity = excluded.quantity,
+                unit = excluded.unit,
+                gas = excluded.gas,
+                methane_basis = excluded.methane_basis,
+                geography = excluded.geography,
+                data_type = excluded.data_type,
+                period_start = excluded.period_start,
+                period_end = excluded.period_end,
+                description = excluded.description,
+                notes = excluded.notes
             """,
             (
                 activity.activity_id, period_id, activity.scope, activity.category,
@@ -197,6 +241,142 @@ class CarbonDatabase:
             entities=entities,
             notes=row["notes"],
         )
+
+    # -- product carbon footprint (milestone 6) ----------------------------- #
+    def save_pcf_definition(self, product: ProductDefinition) -> None:
+        """Persist a product definition; re-saving replaces the stored row."""
+        self._conn.execute(
+            """
+            INSERT INTO pcf_definitions (
+                id, product_name, functional_unit, production_qty,
+                production_unit, system_boundary, notes
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                product_name = excluded.product_name,
+                functional_unit = excluded.functional_unit,
+                production_qty = excluded.production_qty,
+                production_unit = excluded.production_unit,
+                system_boundary = excluded.system_boundary,
+                notes = excluded.notes
+            """,
+            (
+                product.pcf_id, product.product_name, product.functional_unit,
+                product.production_qty, product.production_unit,
+                product.system_boundary, product.notes,
+            ),
+        )
+        self._conn.commit()
+
+    def load_pcf_definition(self, pcf_id: str) -> ProductDefinition:
+        row = self._conn.execute(
+            "SELECT * FROM pcf_definitions WHERE id = ?", (pcf_id,)
+        ).fetchone()
+        if row is None:
+            raise PCFError(f"no PCF definition recorded for {pcf_id!r}")
+        return ProductDefinition(
+            pcf_id=row["id"],
+            product_name=row["product_name"],
+            functional_unit=row["functional_unit"],
+            production_qty=row["production_qty"],
+            production_unit=row["production_unit"],
+            system_boundary=row["system_boundary"],
+            notes=row["notes"],
+        )
+
+    def save_allocation_rule(self, pcf_id: str, rule: AllocationRule) -> None:
+        """Persist an allocation rule; re-saving replaces rules for that stage."""
+        with self._conn:
+            self._conn.execute(
+                "DELETE FROM allocation_rules WHERE pcf_id = ? AND stage IS ?",
+                (pcf_id, rule.stage),
+            )
+            self._conn.execute(
+                """
+                INSERT INTO allocation_rules (
+                    pcf_id, stage, method, basis_value, basis_total, basis_unit, notes
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (pcf_id, rule.stage, rule.method, rule.basis_value,
+                 rule.basis_total, rule.basis_unit, rule.notes),
+            )
+
+    def list_allocation_rules(self, pcf_id: str) -> list[AllocationRule]:
+        rows = self._conn.execute(
+            "SELECT * FROM allocation_rules WHERE pcf_id = ? ORDER BY id", (pcf_id,)
+        ).fetchall()
+        return [
+            AllocationRule(
+                method=row["method"],
+                stage=row["stage"],
+                basis_value=row["basis_value"],
+                basis_total=row["basis_total"],
+                basis_unit=row["basis_unit"],
+                notes=row["notes"],
+            )
+            for row in rows
+        ]
+
+    def save_pcf_line(self, pcf_id: str, line: PCFLineItem) -> None:
+        """Persist one inventory line.
+
+        The referenced activity and factor must already be stored: the PCF
+        inventory is an audit trail and must not contain untraceable rows.
+        """
+        try:
+            self._conn.execute(
+                """
+                INSERT INTO pcf_inventory (
+                    pcf_id, stage, activity_id, factor_id, co2e_kg,
+                    excluded_from_corporate
+                ) VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (pcf_id, line.stage, line.activity_id, line.factor_id,
+                 line.co2e_kg, int(line.excluded_from_corporate)),
+            )
+            self._conn.commit()
+        except sqlite3.IntegrityError as exc:
+            raise PCFError(
+                f"cannot store PCF line {line.activity_id}/{line.factor_id}: the "
+                f"activity and factor must be saved first ({exc})"
+            ) from exc
+
+    def save_pcf_result(self, result: PCFResult,
+                        rules: Iterable[AllocationRule] = ()) -> None:
+        """Persist a complete PCF: definition, allocation rules and inventory."""
+        self.save_pcf_definition(result.product)
+        for rule in rules:
+            self.save_allocation_rule(result.product.pcf_id, rule)
+        self._conn.execute(
+            "DELETE FROM pcf_inventory WHERE pcf_id = ?", (result.product.pcf_id,)
+        )
+        self._conn.commit()
+        for line in result.items:
+            self.save_pcf_line(result.product.pcf_id, line)
+
+    def list_pcf_lines(self, pcf_id: str) -> list[dict]:
+        """Stored inventory rows (numbers as persisted, not recomputed)."""
+        rows = self._conn.execute(
+            "SELECT stage, activity_id, factor_id, co2e_kg, excluded_from_corporate "
+            "FROM pcf_inventory WHERE pcf_id = ? ORDER BY id",
+            (pcf_id,),
+        ).fetchall()
+        return [
+            {
+                "stage": row["stage"],
+                "activity_id": row["activity_id"],
+                "factor_id": row["factor_id"],
+                "co2e_kg": row["co2e_kg"],
+                "excluded_from_corporate": bool(row["excluded_from_corporate"]),
+            }
+            for row in rows
+        ]
+
+    def pcf_total_kg(self, pcf_id: str) -> float:
+        row = self._conn.execute(
+            "SELECT COALESCE(SUM(co2e_kg), 0) AS total FROM pcf_inventory WHERE pcf_id = ?",
+            (pcf_id,),
+        ).fetchone()
+        return float(row["total"])
 
     def close(self) -> None:
         self._conn.close()
