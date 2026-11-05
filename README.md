@@ -32,7 +32,18 @@ the activity record, emission factor and GWP set that produced it.
   stages, mass / economic / physical-causality allocation, and a footprint
   expressed per functional unit. Rows shared with the corporate inventory are
   cross-checked so the two workflows cannot double count.
-- **Audit trail** — every `EmissionResult` records AD, EF, factor ID, gas,
+- **Hotspot analysis** — emissions ranked by substance, category, scope, gas,
+  activity; product carbon intensity; returns a list of ``Hotspot`` objects with
+  absolute CO2e, share and row count.
+- **Sensitivity analysis** — one-at-a-time tornado analysis: each nominated
+  input (quantity or factor) perturbed by ±delta % and the whole inventory
+  recomputed through the engine. Results ordered by absolute swing; supports
+  quantity and factor perturbations; returns ``SensitivityResult`` with rows.
+- **Monte Carlo uncertainty** — seeded reproducible propagation through the
+  same E = AD × EF engine. Supports normal/lognormal/triangular/uniform/fixed
+  distributions around each input; reports mean, median, std, p5/p95, min/max,
+  relative std dev, and variance-share contributions (squared Pearson correlation,
+  normalised to 1).
   GWP and GWP set; SQLite schema keeps row-level results for reconciliation.
 - **Corporate boundary & comparison** — documentable organisational boundary
   (operational/financial control or equity share) with consolidated totals,
