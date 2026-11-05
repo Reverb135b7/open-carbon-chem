@@ -252,8 +252,8 @@ Rules:
 | 4 | Core calculation engine | **Done** (GWP sets, E = AD × EF, CO2e, audit results, tests) |
 | 5 | Corporate GHG accounting | **Done** (Scope 1/2/3 catalogue, `OrganisationalBoundary` + consolidation, `OrganizationReport` reconciliation, `PeriodComparison`, boundary persistence) |
 | 6 | Product Carbon Footprint | **Done** (stage catalogue + boundary rules, `ProductDefinition`, `InventoryItem`, mass/economic/physical-causality/none allocation, PCF = Σ attributable CO2e / reference flow, double-counting guard vs corporate report, SQLite persistence, 28 tests) |
-| 7 | Hotspot, sensitivity and uncertainty analysis | Pending |
-| 8 | Decarbonisation scenario modelling | Pending |
+| 7 | Hotspot, sensitivity and uncertainty analysis | **Done** (hotspot rankings by substance/category/scope/gas; one-at-a-time tornado sensitivity; Monte Carlo with seeded reproducibility, percentile ordering p5 ≤ median ≤ p95; variance-share contributions; >25 tests) |
+| 8 | Decarbonisation scenario modelling | **Done** (7 levers: renewable electricity, energy efficiency, fuel switching, material substitution, waste reduction, process optimisation, transport optimisation; baseline/scenario comparison with absolute and % reduction; ScenarioError on unknown/zero-lever; persistence via CarbonDatabase; engine_run and compare_scenarios helpers) |
 | 9 | Streamlit interface | Pending |
 | 10 | Reporting (PDF/Excel), documentation, full test suite | Partial (this plan + README; PDF/Excel pending) |
 | 11 | Final integration and GitHub publication | Pending |

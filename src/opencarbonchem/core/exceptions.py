@@ -107,6 +107,10 @@ class UncertaintyError(OpenCarbonChemError):
     """A probability distribution or Monte Carlo configuration is invalid."""
 
 
+class AnalyticsError(OpenCarbonChemError):
+    """A hotspot or sensitivity-analysis request is invalid."""
+
+
 class ReconciliationError(OpenCarbonChemError):
     """Reported totals do not reconcile with the underlying calculation records."""
 
