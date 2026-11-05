@@ -1,0 +1,416 @@
+# MASTER PROJECT HANDOVER — OpenCarbonChem
+
+## 1. Project Identity
+
+**Project Name:** OpenCarbonChem
+
+**Full Title:** Open-Source Carbon Accounting and Sustainability Analytics Engine for Chemical and Process Industries.
+
+**Objective:** Develop a modular, open-source Python application for industrial greenhouse gas accounting, Product Carbon Footprint (PCF), Scope 1, 2 and 3 emissions calculations, uncertainty analysis and decarbonisation scenario modelling.
+
+The project must demonstrate the integration of:
+- Chemical engineering principles.
+- Industrial sustainability.
+- Life Cycle Assessment.
+- Product Carbon Footprint.
+- Corporate GHG accounting.
+- Python software engineering.
+- Environmental data analytics.
+
+This is intended to be a substantial engineering portfolio project suitable for GitHub publication, CV inclusion, ESG consulting applications and potential academic research.
+
+## 2. Primary Development Objective
+
+Build a functional, reproducible and auditable carbon accounting platform.
+
+The application must support two independent accounting workflows:
+
+**A. Corporate GHG Accounting**
+- Scope 1 direct emissions.
+- Scope 2 purchased energy emissions.
+- All 15 Scope 3 categories.
+- Organisational boundaries and reporting periods.
+- Annual GHG inventory and emissions intensity.
+
+**B. Product Carbon Footprint**
+- Product definition.
+- Functional unit.
+- System boundary.
+- Life-cycle inventory.
+- Raw material emissions.
+- Manufacturing energy.
+- Transportation.
+- Packaging.
+- Waste.
+- Allocation.
+- Product-level CO2e calculation.
+
+These workflows must share a common calculation engine without double-counting emissions.
+
+## 3. Technical Stack
+
+Use the following preferred technologies:
+
+- Python 3.12 or a compatible supported version.
+- Pandas and NumPy.
+- Streamlit.
+- Plotly.
+- SciPy.
+- Pydantic.
+- SQLite initially.
+- SQLAlchemy if database abstraction is useful.
+- Pytest.
+- ReportLab.
+- openpyxl.
+- Git and GitHub.
+
+Use a modular Python package structure. Do not place the entire application in a single Python file.
+
+The calculation engine must be independent of the user interface.
+
+## 4. Core Development Modules
+
+Implement the following modules in order:
+
+1. Activity data management.
+2. Emission factor database.
+3. Unit conversion engine.
+4. Gas-specific emissions calculation.
+5. GWP conversion.
+6. Scope 1 accounting.
+7. Scope 2 accounting.
+8. Scope 3 accounting.
+9. Product Carbon Footprint calculator.
+10. Allocation methodology.
+11. Hotspot analysis.
+12. Sensitivity analysis.
+13. Monte Carlo uncertainty modelling.
+14. Decarbonisation scenario engine.
+15. Streamlit dashboard.
+16. PDF and Excel report generation.
+
+## 5. Calculation Requirements
+
+Fundamental emissions calculation:
+
+E = Activity Data × Emission Factor
+
+Gas-specific CO2e calculation:
+
+E_CO2e = Sum(E_g × GWP_g)
+
+Product carbon footprint:
+
+PCF = Total attributable life-cycle emissions / Functional unit output
+
+Scenario reduction:
+
+Reduction = Baseline emissions − Scenario emissions
+
+Percentage reduction:
+
+Reduction (%) = (Reduction / Baseline emissions) × 100
+
+Ensure all calculations use dimensionally compatible units.
+
+Never silently apply an incompatible unit conversion.
+
+Maintain separate records for activity data, emission factors, conversion factors, GWP values and calculation results.
+
+## 6. Emission Factor Database
+
+Create a structured emission factor database.
+
+Each record must contain:
+
+- Unique factor ID.
+- Activity category.
+- Fuel, material or energy type.
+- Factor value.
+- Factor unit.
+- Gas coverage.
+- Geographic applicability.
+- Reporting year.
+- Source organisation.
+- Source URL or document reference.
+- Publication/version information.
+- Uncertainty information, where available.
+- Methodological notes.
+
+Use authoritative sources such as IPCC, applicable national grid databases, government conversion-factor datasets and appropriately licensed LCA databases.
+
+Do not invent emission factors or claim illustrative values are official.
+
+Clearly distinguish measured primary activity data from secondary emission factors.
+
+Do not redistribute proprietary databases without permission.
+
+## 7. Corporate GHG Accounting
+
+Implement the GHG Protocol framework.
+
+Scope 1:
+- Stationary combustion.
+- Mobile combustion.
+- Fugitive emissions.
+- Process emissions.
+
+Scope 2:
+- Purchased electricity.
+- Purchased steam.
+- Purchased heating and cooling.
+- Location-based and market-based methods where applicable.
+
+Scope 3:
+Implement all 15 GHG Protocol categories, including category applicability, data requirements and exclusions.
+
+Ensure the software supports organisational boundary documentation and reporting-year comparisons.
+
+## 8. PCF Requirements
+
+Allow users to define:
+
+- Product name.
+- Functional unit.
+- Production quantity.
+- System boundary.
+- Production stages.
+- Raw materials.
+- Energy inputs.
+- Transportation.
+- Packaging.
+- Waste.
+- Allocation rules.
+
+Support cradle-to-gate and cradle-to-grave boundaries.
+
+Support transparent allocation methods where appropriate.
+
+Ensure that product-level accounting and corporate inventory reporting remain consistent and do not double-count emissions.
+
+## 9. Advanced Analytics
+
+Implement:
+
+**Hotspot analysis**
+- Emissions by raw material.
+- Emissions by process.
+- Emissions by energy source.
+- Emissions by Scope.
+- Product carbon intensity.
+
+**Sensitivity analysis**
+- Electricity emission factors.
+- Raw material sourcing.
+- Production yield.
+- Transportation.
+- Fuel consumption.
+- Packaging.
+
+**Monte Carlo analysis**
+- Configurable probability distributions.
+- Reproducible random seed.
+- Mean and median.
+- Standard deviation.
+- 5th and 95th percentiles.
+- Uncertainty contribution analysis.
+
+**Decarbonisation scenarios**
+- Renewable electricity.
+- Energy efficiency.
+- Fuel switching.
+- Material substitution.
+- Waste reduction.
+- Process optimisation.
+- Transport optimisation.
+
+Allow users to compare baseline and alternative scenarios.
+
+## 10. Dashboard
+
+Build a Streamlit application with these pages:
+
+1. Overview.
+2. Activity Data Management.
+3. Emission Factor Database.
+4. Scope 1 Accounting.
+5. Scope 2 Accounting.
+6. Scope 3 Accounting.
+7. Product Carbon Footprint.
+8. Hotspot Analysis.
+9. Sensitivity and Uncertainty.
+10. Decarbonisation Scenarios.
+11. Report Generation.
+
+The dashboard should be professional, intuitive and suitable for an industrial sustainability analyst.
+
+Include interactive charts and downloadable results.
+
+## 11. GitHub Repository
+
+Repository name: opencarbonchem
+
+Use the following broad structure:
+
+- app/
+- src/opencarbonchem/core/
+- src/opencarbonchem/accounting/
+- src/opencarbonchem/pcf/
+- src/opencarbonchem/factors/
+- src/opencarbonchem/analytics/
+- src/opencarbonchem/scenarios/
+- src/opencarbonchem/reporting/
+- src/opencarbonchem/database/
+- data/
+- notebooks/
+- tests/
+- docs/
+- reports/
+
+Create:
+- README.md
+- LICENSE
+- CONTRIBUTING.md
+- requirements.txt or pyproject.toml
+- .gitignore
+- Methodology documentation.
+- Assumptions documentation.
+- Data dictionary.
+- Emission factor provenance policy.
+- Validation protocol.
+
+## 12. Testing and Quality Assurance
+
+Develop automated tests for:
+
+- Basic emissions calculations.
+- Unit conversions.
+- Invalid units.
+- Missing factors.
+- GWP calculations.
+- Scope classification.
+- Scope 2 accounting.
+- Scope 3 category mapping.
+- PCF calculations.
+- Allocation.
+- Uncertainty analysis.
+- Scenario comparisons.
+- Report reconciliation.
+
+Use independently calculated test cases as expected values.
+
+The application must fail safely when data is incomplete or invalid.
+
+## 13. Documentation
+
+Write a professional GitHub README containing:
+
+- Project overview.
+- Problem statement.
+- Objectives.
+- Features.
+- Architecture.
+- Methodology.
+- Standards and frameworks.
+- Installation instructions.
+- Usage instructions.
+- Example datasets.
+- Screenshots.
+- Example calculations.
+- Limitations.
+- Future development roadmap.
+- References.
+
+Include a methodology document explaining the accounting assumptions and limitations.
+
+Clearly identify all synthetic datasets and illustrative results.
+
+Do not claim certification, independent verification or formal standards conformity without the relevant assessment.
+
+## 14. Final Deliverables
+
+The completed project must include:
+
+1. Functional Python calculation package.
+2. Emission factor database.
+3. Corporate GHG inventory module.
+4. Product PCF module.
+5. Scope 1, 2 and 3 reporting.
+6. Unit conversion and GWP engine.
+7. Hotspot analytics.
+8. Sensitivity analysis.
+9. Monte Carlo uncertainty analysis.
+10. Decarbonisation scenario modelling.
+11. Streamlit dashboard.
+12. PDF report generator.
+13. Excel report generator.
+14. Synthetic sample datasets.
+15. Automated testing suite.
+16. Technical documentation.
+17. Professional GitHub repository.
+18. Installation and deployment instructions.
+19. Demonstration use case for a chemical/process manufacturing facility.
+
+## 15. Development Strategy
+
+Do not attempt the entire project in one coding pass.
+
+Develop in incremental milestones:
+
+Milestone 1: Requirements, architecture and standards mapping.
+
+Milestone 2: Database schemas and activity data management.
+
+Milestone 3: Emission factor database and unit conversion.
+
+Milestone 4: Core calculation engine.
+
+Milestone 5: Corporate GHG accounting.
+
+Milestone 6: Product Carbon Footprint.
+
+Milestone 7: Hotspot, sensitivity and uncertainty analysis.
+
+Milestone 8: Decarbonisation scenario modelling.
+
+Milestone 9: Streamlit interface.
+
+Milestone 10: Reporting, testing and documentation.
+
+Milestone 11: Final integration and GitHub publication.
+
+At the end of every milestone:
+- Run automated tests.
+- Check calculation consistency.
+- Update documentation.
+- Provide a list of completed features.
+- Identify outstanding issues.
+- Commit working code to version control.
+
+Do not claim a feature is implemented until it has been tested.
+
+## 16. Instructions to the Development Agent
+
+Act as a senior Python software architect, chemical engineer, sustainability consultant and carbon accounting specialist.
+
+Take responsibility for designing and implementing OpenCarbonChem.
+
+Prioritise:
+- Scientific correctness.
+- Engineering accuracy.
+- Transparent accounting methodology.
+- Reproducible calculations.
+- Clean software architecture.
+- Professional documentation.
+- Automated validation.
+- Maintainability.
+
+First produce the system requirements, architecture diagram, database schema, module specifications and implementation roadmap.
+
+Then begin implementation milestone by milestone.
+
+Do not fabricate data, emission factors, standards references or calculation results.
+
+When information is unavailable, document the limitation and use clearly labelled synthetic data for software testing.
+
+The final objective is a working, technically credible, open-source carbon accounting platform rather than a static demonstration or collection of disconnected Jupyter notebooks.

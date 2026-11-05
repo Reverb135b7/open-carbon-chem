@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# Testing / tooling
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Local databases and exports
+*.sqlite
+*.sqlite3
+*.db
+data/exports/*
+!data/exports/.gitkeep
+reports/*
+!reports/.gitkeep
+
+# Secrets and local overrides
+.env
+*.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
