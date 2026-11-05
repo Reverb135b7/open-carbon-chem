@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "opencarbonchem"
+version = "0.1.0"
+description = "Open-source carbon accounting and sustainability analytics engine for chemical and process industries"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+authors = [{ name = "OpenCarbonChem contributors" }]
+keywords = [
+    "carbon-accounting",
+    "ghg-protocol",
+    "product-carbon-footprint",
+    "life-cycle-assessment",
+    "scope-1-2-3",
+    "decarbonisation",
+    "chemical-engineering",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Environmental Sciences",
+]
+dependencies = [
+    "pandas>=2.0",
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "pydantic>=2.5",
+    "plotly>=5.18",
+    "streamlit>=1.30",
+    "reportlab>=4.0",
+    "openpyxl>=3.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4", "pytest-cov>=4.1", "ruff>=0.4"]
+
+[project.scripts]
+opencarbonchem = "opencarbonchem.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+opencarbonchem = ["factors/data/*.csv", "database/schema.sql", "py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q --strict-markers"
+markers = [
+    "unit: fast isolated unit tests",
+    "integration: tests crossing module boundaries",
+    "slow: Monte Carlo and large-data tests",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
