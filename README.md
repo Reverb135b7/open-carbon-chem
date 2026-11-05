@@ -8,7 +8,7 @@ uncertainty analysis and decarbonisation scenario modelling. The calculation
 engine is independent of any user interface and every reported number carries
 the activity record, emission factor and GWP set that produced it.
 
-> **Status:** early development (v0.1.0). Milestones 1–6 are complete and
+> **Status:** early development (v0.2.0). Milestones 1–6 are complete and
 > tested (125 tests); Scope 1/2/3 corporate accounting and Product Carbon
 > Footprints are implemented (see
 > [`docs/architecture.md`](docs/architecture.md) for the roadmap). Not yet
@@ -150,3 +150,9 @@ reports/    generated output
 
 Apache-2.0 (see `pyproject.toml`). A `LICENSE` file is planned for the
 publication milestone.
+- CONTRIBUTING.md
+- methodology_documentation.md
+- assumptions_documentation.md
+- data_dictionary.md
+- emission_factor_provenance_policy.md
+- validation_protocol.md
