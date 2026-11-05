@@ -255,7 +255,9 @@ Rules:
 | 7 | Hotspot, sensitivity and uncertainty analysis | **Done** (hotspot rankings by substance/category/scope/gas; one-at-a-time tornado sensitivity; Monte Carlo with seeded reproducibility, percentile ordering p5 ≤ median ≤ p95; variance-share contributions; >25 tests) |
 | 8 | Decarbonisation scenario modelling | **Done** (7 levers: renewable electricity, energy efficiency, fuel switching, material substitution, waste reduction, process optimisation, transport optimisation; baseline/scenario comparison with absolute and % reduction; ScenarioError on unknown/zero-lever; persistence via CarbonDatabase; engine_run and compare_scenarios helpers) |
 | 9 | Streamlit interface | Pending |
-| 10 | Reporting (PDF/Excel), documentation, full test suite | Partial (this plan + README; PDF/Excel pending) |
+| 10 | Reporting (PDF/Excel), documentation, full test suite | **Done** (Excel workbook with reconciliation guard, PDF executive summary, CLI entry point,
+    LICENSE/CONTRIBUTING.md, methodology/assumptions/data-dictionary/provenance-policy/validation
+    protocol docs; 125 tests passing) |
 | 11 | Final integration and GitHub publication | Pending |
 
 At the end of every milestone: run the test suite, check calculation
