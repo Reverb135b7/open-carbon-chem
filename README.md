@@ -9,7 +9,7 @@ engine is independent of any user interface and every reported number carries
 the activity record, emission factor and GWP set that produced it.
 
 > **Status:** early development (v0.2.0). Milestones 1–6 are complete and
-> tested (125 tests); Scope 1/2/3 corporate accounting and Product Carbon
+> tested (200 tests); Scope 1/2/3 corporate accounting and Product Carbon
 > Footprints are implemented (see
 > [`docs/architecture.md`](docs/architecture.md) for the roadmap). Not yet
 > certified, verified or conformant with any standard — it implements
@@ -140,16 +140,15 @@ reports/    generated output
 | 4 Core calculation engine | done |
 | 5 Corporate GHG accounting | done |
 | 6 Product carbon footprint | done |
-| 7 Hotspot / sensitivity / Monte Carlo | pending |
-| 8 Decarbonisation scenarios | pending |
-| 9 Streamlit dashboard | pending |
+| 7 Hotspot / sensitivity / Monte Carlo | done |
+| 8 Decarbonisation scenarios | done (7 levers, 36 tests) |
+| 9 Streamlit dashboard | done (11 pages, smoke-tested) |
 | 10 PDF/Excel reporting & docs | done |
-| 11 Final integration & publication | pending |
+| 11 Final integration & publication | done locally; push awaits owner authorisation |
 
 ## License
 
-Apache-2.0 (see `pyproject.toml`). A `LICENSE` file is planned for the
-publication milestone.
+Apache-2.0 (see `LICENSE` and `pyproject.toml`).
 - CONTRIBUTING.md
 - methodology_documentation.md
 - assumptions_documentation.md

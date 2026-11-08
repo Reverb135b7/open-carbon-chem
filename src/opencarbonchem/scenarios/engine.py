@@ -1,243 +1,229 @@
 """Decarbonisation scenario engine: baseline vs scenario comparison.
 
-The engine recomputes totals through the same accounting engine, so there is
-no hand-rolled math that can drift from the calculation methodology.
+The engine recomputes totals through the same calculation engine
+(:func:`opencarbonchem.core.calc.compute_emissions`), so there is no
+hand-rolled arithmetic that can drift from the accounting methodology.
 
-Baseline and scenario runs are persisted through ``CarbonDatabase`` and the
-reduction formulas (architecture §2.1) are applied automatically:
+Reduction formulas (architecture §2.1)::
 
     Reduction      = Baseline − Scenario
     Reduction (%)  = Reduction / Baseline × 100
 
-Fail-safe: a zero baseline produces ``delta_pct = None``, never 0 % or inf.
+Fail-safe rules:
+
+* A zero baseline cannot yield a percentage — ``reduction_pct`` is ``None``,
+  never 0 % and never infinity.
+* A lever that matches no inventory rows raises :class:`ScenarioError` upstream
+  in :mod:`opencarbonchem.scenarios.levers`; modelling nothing would let a user
+  publish a "reduction" that was never applied.
+* A lever that *increases* emissions reports a negative reduction. The engine
+  never hides an adverse result.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+import sqlite3
+from dataclasses import dataclass, replace
 from typing import Iterable
 
-from ..accounting.aggregate import OrganizationReport
-from ..core.calc import EmissionResult, compute_emissions
 from ..core.exceptions import ScenarioError
 from ..core.gwp import DEFAULT_GWP_SET
-from ..factors.models import EmissionFactor
-from ..scenarios.levers import (
-    EnergyEfficiency,
-    FuelSwitch,
-    Lever,
-    MaterialSubstitution,
-    ProcessOptimisation,
-    RenewableElectricity,
-    TransportOptimisation,
-    WasteReduction,
-    LEVER_KINDS,
-    lever_from_kind,
-)
-from ..database import CarbonDatabase
-from .models import AllocationRule
-
+from ..core.inventory import InventoryEntry, base_rows, validate_entries
+from .levers import LEVER_KINDS, Lever, lever_from_kind
 
 __all__ = [
     "ScenarioResult",
     "Scenario",
-    "ScenarioEngine",
+    "baseline_result",
     "apply_lever",
+    "run_levers",
     "compare_scenarios",
+    "scenario_from_kind",
+    "persist_scenarios",
+    "LEVER_KINDS",
 ]
 
 
 @dataclass(frozen=True)
 class ScenarioResult:
-    """Outcome of one scenario run (baseline or alternative)."""
+    """Outcome of one scenario run: a baseline total and the scenario total."""
 
     name: str
+    lever: str
     baseline_kg: float
     scenario_kg: float
     reduction_kg: float
     reduction_pct: float | None
 
     @property
-    def kind(self) -> str:
-        # 'baseline' means the original run with no lever applied
-        return self.name.split()[0].lower() if self.name else "unknown"
+    def total_kg(self) -> float:
+        """The scenario's CO2e total (kg)."""
+        return self.scenario_kg
+
+    @property
+    def changed(self) -> bool:
+        """True when the lever actually moved the total."""
+        return self.scenario_kg != self.baseline_kg
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "lever": self.lever,
+            "baseline_kg": self.baseline_kg,
+            "scenario_kg": self.scenario_kg,
+            "reduction_kg": self.reduction_kg,
+            "reduction_pct": self.reduction_pct,
+        }
 
 
-@dataclass(frozen=True)
-class Scenario:
-    """A named scenario that applies a single lever to the baseline entries."""
+def _total_kg(entries: Iterable[InventoryEntry], gwp_set: str) -> float:
+    return sum(row.co2e_kg for row in base_rows(tuple(entries), gwp_set))
 
-    name: str
-    kind: str = ""
-    lever: Lever | None = None
 
-    def apply_to(
-        self,
-        baseline_entries: Iterable[InventoryEntry],
-        gwp_set: str = DEFAULT_GWP_SET,
-    ) -> ScenarioResult:
-        if self.lever is None:
-            raise ScenarioError("Scenario has no lever attached.")
+def _percent(reduction_kg: float, baseline_kg: float) -> float | None:
+    """Reduction as a percentage of the baseline, or ``None`` when undefined."""
+    if baseline_kg <= 0:
+        return None
+    return reduction_kg / baseline_kg * 100.0
 
-        materialised = InventoryEntry.validate_entries(baseline_entries)
-        results = InventoryEntry.base_rows(materialised, gwp_set)
-        baseline_kg = sum(r.co2e_kg for r in results)
 
-        # Apply the lever; if it raises ScenarioError, the caller should
-        // catch it and inform the user.
-        try:
-            after = self.lever.apply(baseline_entries)
-        except ScenarioError:
-            raise
-
-        # Recompute totals after the transformation.
-        updated = InventoryEntry.validate_entries(after)
-        updated_results = InventoryEntry.base_rows(updated, gwp_set)
-        scenario_kg = sum(r.co2e_kg for r in updated_results)
-
-        reduction_kg = baseline_kg - scenario_kg
-        reduction_pct = (reduction_kg / baseline_kg * 100.0) if baseline_kg > 0 else None
-
-        return ScenarioResult(
-            name=self.name if self.name else "unnamed scenario",
-            baseline_kg=baseline_kg,
-            scenario_kg=scenario_kg,
-            reduction_kg=reduction_kg,
-            reduction_pct=reduction_pct,
-        )
+def baseline_result(
+    entries: Iterable[InventoryEntry], *, gwp_set: str = DEFAULT_GWP_SET
+) -> ScenarioResult:
+    """The unmodified inventory total, used as the comparison baseline."""
+    validated = validate_entries(entries)
+    total = _total_kg(validated, gwp_set)
+    return ScenarioResult(
+        name="Baseline",
+        lever="baseline",
+        baseline_kg=total,
+        scenario_kg=total,
+        reduction_kg=0.0,
+        reduction_pct=0.0 if total > 0 else None,
+    )
 
 
 def apply_lever(
     lever: Lever,
     entries: Iterable[InventoryEntry],
+    *,
     gwp_set: str = DEFAULT_GWP_SET,
 ) -> ScenarioResult:
-    """Convenience wrapper that creates an empty-scenario and applies the lever."""
-    return Scenario(name=f"{lever.name} scenario", lever=lever).apply_to(entries, gwp_set)
+    """Apply ``lever`` to ``entries`` and recompute both totals.
 
+    The transformed inventory is recomputed through the normal engine. A lever
+    that removes every row (e.g. 100 % renewable electricity with a zero
+    residual factor) legitimately yields a scenario total of ``0.0``.
+    """
+    validated = validate_entries(entries)
+    baseline_kg = _total_kg(validated, gwp_set)
 
-def compare_scenarios(
-    baseline: ScenarioResult,
-    alternative: ScenarioResult,
-) -> dict:
-    """Return absolute and % reductions between two ScenarioResults."""
-    if baseline.baseline_kg == 0:
-        return {
-            "baseline_kg": baseline.baseline_kg,
-            "alternative_kg": alternative.scenario_kg,
-            "reduction_kg": None,
-            "reduction_pct": None,
-            "status": "baseline_is_zero",
-        }
+    transformed = tuple(lever.apply(validated))
+    scenario_kg = sum(row.co2e_kg for row in base_rows(transformed, gwp_set))
 
-    reduction_kg = baseline.baseline_kg - alternative.scenario_kg
-    reduction_pct = (reduction_kg / baseline.baseline_kg * 100.0) if baseline.baseline_kg > 0 else None
-
-    status = (
-        "compared"
-        if reduction_kg is not None and reduction_pct is not None
-        else ("partial" if reduction_kg is None else "no_data")
+    reduction_kg = baseline_kg - scenario_kg
+    return ScenarioResult(
+        name=f"{lever.name} scenario",
+        lever=lever.kind,
+        baseline_kg=baseline_kg,
+        scenario_kg=scenario_kg,
+        reduction_kg=reduction_kg,
+        reduction_pct=_percent(reduction_kg, baseline_kg),
     )
 
-    return {
-        "baseline_kg": baseline.baseline_kg,
-        "alternative_kg": alternative.scenario_kg,
-        "reduction_kg": reduction_kg,
-        "reduction_pct": reduction_pct,
-        "status": status,
-    }
+
+@dataclass(frozen=True)
+class Scenario:
+    """A named lever application, so results carry a meaningful label."""
+
+    name: str
+    lever: Lever
+
+    def apply_to(
+        self, entries: Iterable[InventoryEntry], *, gwp_set: str = DEFAULT_GWP_SET
+    ) -> ScenarioResult:
+        result = apply_lever(self.lever, entries, gwp_set=gwp_set)
+        return replace(result, name=self.name)
 
 
-def engine_run(
+def run_levers(
     entries: Iterable[InventoryEntry],
+    levers: Iterable[Lever],
+    *,
     gwp_set: str = DEFAULT_GWP_SET,
-    lever: Lever | None = None,
-    lever_name: str | None = None,
 ) -> tuple[ScenarioResult, ...]:
-    """Run a full baseline (optional lever) and return one ScenarioResult per lever."""
-    materialised = InventoryEntry.validate_entries(entries)
-    results = InventoryEntry.base_rows(materialised, gwp_set)
-    baseline_kg = sum(r.co2e_kg for r in results)
-
-    results: list[ScenarioResult] = []
-
-    # Always include the baseline with no lever.
-    results.append(
-        ScenarioResult(
-            name="baseline",
-            baseline_kg=baseline_kg,
-            scenario_kg=baseline_kg,
-            reduction_kg=0.0,
-            reduction_pct=0.0,
-        )
-    )
-
-    if lever is not None:
-        scenario = Scenario(name=lever_name or lever.name, lever=lever)
-        try:
-            res = scenario.apply_to(entries, gwp_set)
-            results.append(res)
-        except ScenarioError as exc:
-            # Record it so the UI can show "this lever does not apply".
-            results.append(
-                ScenarioResult(
-                    name=lever.name,
-                    baseline_kg=baseline_kg,
-                    scenario_kg=baseline_kg,
-                    reduction_kg=None,
-                    reduction_pct=None,
-                )
-            )
-    else:
-        # No lever specified – just the baseline.
-        pass
-
+    """Baseline followed by one result per lever (dashboard/report order)."""
+    validated = validate_entries(entries)
+    results = [baseline_result(validated, gwp_set=gwp_set)]
+    results.extend(apply_lever(lever, validated, gwp_set=gwp_set) for lever in levers)
     return tuple(results)
 
 
-def scenario_from_kind(
-    kind: str,
-    **kwargs,
-) -> Lever:
-    """Factory: map a kind string to a lever class with keyword overrides."""
-    cls = lever_from_kind(kind)
-    # The dataclass constructor fills missing fields with defaults; we re-inject
-    # the user-supplied kwargs (or the default from __post_init__).
-    return cls(**kwargs)
+def compare_scenarios(
+    baseline: ScenarioResult, alternative: ScenarioResult
+) -> dict:
+    """Absolute and percentage change from ``baseline`` to ``alternative``."""
+    baseline_kg = baseline.scenario_kg
+    alternative_kg = alternative.scenario_kg
+    reduction_kg = baseline_kg - alternative_kg
+    return {
+        "baseline_kg": baseline_kg,
+        "alternative_kg": alternative_kg,
+        "reduction_kg": reduction_kg,
+        "reduction_pct": _percent(reduction_kg, baseline_kg),
+        "status": "compared" if baseline_kg > 0 else "baseline_is_zero",
+    }
+
+
+def scenario_from_kind(kind: str, **kwargs: object) -> Lever:
+    """Build a lever from its kind string (used by the UI and persistence)."""
+    return lever_from_kind(kind)(**kwargs)  # type: ignore[arg-type]
 
 
 # --------------------------------------------------------------------------- #
-# Persistence helpers
+# Persistence
 # --------------------------------------------------------------------------- #
-def save_scenario_results(
-    db: CarbonDatabase,
+def persist_scenarios(
+    db,
     run_id: str,
-    period_id: str,
     results: Iterable[ScenarioResult],
+    period_id: str | None = None,
+    *,
     gwp_set: str = DEFAULT_GWP_SET,
 ) -> None:
-    """Persist ``results`` in ``scenario_results``; the run already exists."""
-    db.start_run(run_id, gwp_set, period_id)
-    db.save_results(run_id, [row for r in results for row in []])  # placeholder
-    # NOTE: scenario results have their own table (schema.sql §5); the engine
-    # engine that persisted via `save_scope_result` / `save_results` is not
-    # designed for ``ScenarioResult`` — this is a hand-crafted extension.
-    with db._conn:
-        db._conn.execute("DELETE FROM scenario_results WHERE run_id = ?", (run_id,))
-    for result in results:
-        db._conn.execute(
-            """
-            INSERT INTO scenario_results
-                (scenario_id, run_id, category, baseline_kg, scenario_kg, reduction_kg)
-            VALUES (?, ?, ?, ?, ?, ?)
-            """,
-            (
-                result.name,
-                run_id,
-                "",  # category not broken down here; future work
-                result.baseline_kg,
-                result.scenario_kg,
-                result.reduction_kg,
+    """Store scenario headers and their results under one calculation run.
+
+    ``run_id`` must be new: re-using an existing run would silently overwrite
+    the audit trail of an earlier calculation.
+    """
+    materialised = tuple(results)
+    if not materialised:
+        raise ScenarioError("no scenario results to persist")
+
+    try:
+        db.start_run(run_id, gwp_set, period_id)
+    except sqlite3.IntegrityError as exc:
+        raise ScenarioError(
+            f"calculation run {run_id!r} already exists; choose a new run id "
+            "so earlier results are not overwritten"
+        ) from exc
+
+    for result in materialised:
+        db.save_scenario(
+            scenario_id=result.name,
+            name=result.name,
+            lever=result.lever,
+            description=(
+                f"SYNTHETIC scenario run {run_id}: baseline "
+                f"{result.baseline_kg:.3f} kg -> scenario "
+                f"{result.scenario_kg:.3f} kg CO2e"
             ),
         )
-    db._conn.commit()
+
+    db.save_scenario_results(
+        run_id,
+        [
+            (result.name, "", result.baseline_kg, result.scenario_kg, result.reduction_kg)
+            for result in materialised
+        ],
+    )
