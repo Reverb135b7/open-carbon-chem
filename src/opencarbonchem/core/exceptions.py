@@ -117,3 +117,11 @@ class ReconciliationError(OpenCarbonChemError):
 
 class ExportError(OpenCarbonChemError):
     """PDF/Excel generation failed."""
+
+
+class ExcelExportError(ExportError):
+    """Excel workbook generation failed."""
+
+
+class PDFExportError(ExportError):
+    """PDF report generation failed."""

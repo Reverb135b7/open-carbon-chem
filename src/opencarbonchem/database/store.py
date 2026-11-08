@@ -15,7 +15,7 @@ from typing import Iterable
 from ..accounting.base import ScopeResult
 from ..accounting.boundary import BoundaryEntity, OrganisationalBoundary
 from ..core.activity import ActivityRecord
-from ..core.exceptions import BoundaryError, PCFError
+from ..core.exceptions import BoundaryError, PCFError, ScenarioError
 from ..core.calc import EmissionResult
 from ..factors.models import EmissionFactor
 from ..pcf.allocation import AllocationRule
@@ -377,6 +377,66 @@ class CarbonDatabase:
             (pcf_id,),
         ).fetchone()
         return float(row["total"])
+
+    # -- decarbonisation scenarios (milestone 8) ---------------------------- #
+    def save_scenario(self, scenario_id: str, name: str, lever: str,
+                      description: str = "") -> None:
+        """Persist a scenario header; re-saving updates it in place."""
+        self._conn.execute(
+            """
+            INSERT INTO scenarios (id, name, lever, description)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                name = excluded.name,
+                lever = excluded.lever,
+                description = excluded.description
+            """,
+            (scenario_id, name, lever, description),
+        )
+        self._conn.commit()
+
+    def save_scenario_results(
+        self, run_id: str, rows: Iterable[tuple[str, str, float, float, float]]
+    ) -> None:
+        """Persist ``(scenario_id, category, baseline_kg, scenario_kg, reduction_kg)`` rows.
+
+        Existing rows for ``run_id`` are replaced, so re-saving a run is
+        idempotent. Unknown scenario ids fail the foreign key check and raise
+        :class:`ScenarioError` rather than storing an orphaned result.
+        """
+        try:
+            with self._conn:
+                self._conn.execute(
+                    "DELETE FROM scenario_results WHERE run_id = ?", (run_id,)
+                )
+                self._conn.executemany(
+                    """
+                    INSERT INTO scenario_results (
+                        scenario_id, run_id, category, baseline_kg,
+                        scenario_kg, reduction_kg
+                    ) VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    [
+                        (scenario_id, run_id, category, baseline_kg, scenario_kg,
+                         reduction_kg)
+                        for scenario_id, category, baseline_kg, scenario_kg, reduction_kg
+                        in rows
+                    ],
+                )
+        except sqlite3.IntegrityError as exc:
+            raise ScenarioError(
+                f"cannot store scenario results for run {run_id!r}: the scenario "
+                f"and calculation run must be saved first ({exc})"
+            ) from exc
+
+    def list_scenario_results(self, run_id: str) -> list[dict]:
+        """Stored scenario result rows for one calculation run."""
+        rows = self._conn.execute(
+            "SELECT scenario_id, category, baseline_kg, scenario_kg, reduction_kg "
+            "FROM scenario_results WHERE run_id = ? ORDER BY id",
+            (run_id,),
+        ).fetchall()
+        return [dict(row) for row in rows]
 
     def close(self) -> None:
         self._conn.close()

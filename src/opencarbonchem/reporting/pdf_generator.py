@@ -15,7 +15,8 @@ From guide §11/§13/§14 / roadmap row 10 (currently "Partial").
 
 from __future__ import annotations
 
-import streamlit as st
+import io
+
 from reportlab.lib.pagesizes import LETTER
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import (
@@ -63,6 +64,13 @@ _BODY_STYLE.spaceAfter = 4
 _HEADING1 = _STYLES["Heading1"]
 _HEADING1.fontSize = 14
 _HEADING1.spaceAfter = 6
+
+_INDENTED_STYLE = ParagraphStyle(
+    "IndentedBody",
+    parent=_BODY_STYLE,
+    leftIndent=20,
+    bulletIndent=0,
+)
 
 _TABLE_HEADER_STYLE = _STYLES["Normal"]
 _TABLE_HEADER_STYLE.fontSize = 9
@@ -181,7 +189,7 @@ class PDFReport:
             "or ``published``; synthetic data clearly marked.",
         ]
         for item in methodology_items:
-            elements.append(Paragraph(item, _BODY_STYLE, leftIndent=20))
+            elements.append(Paragraph(item, _INDENTED_STYLE))
         elements.append(Spacer(1, 0.2 * inch))
 
         # ---- Key results table ----

@@ -1,209 +1,195 @@
-"""CLI entry point for OpenCarbonChem.
+"""Command-line entry point for OpenCarbonChem.
 
-Thin client (N3) that delegates to the package API.
+Thin client (requirement N3): it loads activity data and factors, delegates all
+accounting to the package API, and writes the requested reports. No calculation
+logic lives here.
 
-Usage
------
-    opencarbonchem calculate --activities data/raw/synthetic/activities_synthetic.csv
-        --out run-2024-01 --gwp-set AR6
-    opencarbonchem --help
+Usage::
+
+    opencarbonchem calculate --activities data/activities_synthetic.csv --run-id run-2024
+    opencarbonchem calculate --activities data/activities_synthetic.csv --run-id run-2024 \
+        --gwp-set AR5 --report-types pdf --out reports/
+
+Every failure is reported as a message and a non-zero exit status — the CLI
+never prints a total it could not derive.
 """
 
 from __future__ import annotations
 
-import sys
 import argparse
 import csv
-import traceback
+import sys
+from datetime import date
+from pathlib import Path
 
-from ..database import CarbonDatabase
-from ..factors import FactorRegistry
-from ..core.activity import ActivityRecord
-from ..core.calc import compute_emissions
-from ..accounting.aggregate import calculate_scope1, OrganizationReport, ScopeResult
-from ..reporting.excel_workbook import build_excel_report
-from ..reporting.pdf_generator import build_pdf_report
-from ..reporting.__init__ import __all__ as reporting_all
+from .accounting import (
+    OrganizationReport,
+    ScopeResult,
+    calculate_scope1,
+    calculate_scope2,
+    calculate_scope3,
+)
+from .core.activity import ActivityRecord
+from .core.exceptions import OpenCarbonChemError
+from .core.gwp import DEFAULT_GWP_SET
+from .factors import FactorRegistry
 
 __all__ = ["main"]
 
+_GWP_SETS = ("AR6", "AR5", "AR6-ERRATA-2025")
 
-def _load_activities(csv_path: str) -> list[ActivityRecord]:
-    """Load activities from a CSV file whose columns match ``ActivityRecord`` fields."""
+
+def _parse_date(value: str | None) -> date | None:
+    text = (value or "").strip()
+    if not text:
+        return None
+    return date.fromisoformat(text)
+
+
+def load_activities(csv_path: str | Path) -> list[ActivityRecord]:
+    """Load activity records from a CSV whose columns match ``ActivityRecord``.
+
+    A malformed row is a hard error: silently skipping it would drop activity
+    data from the inventory without telling anyone.
+    """
     activities: list[ActivityRecord] = []
-    with open(csv_path, newline="", encoding="utf-8-sig") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
+    with Path(csv_path).open(newline="", encoding="utf-8-sig") as handle:
+        reader = csv.DictReader(handle)
+        for line_no, row in enumerate(reader, start=2):
             try:
-                a = ActivityRecord(
-                    activity_id=row.get("activity_id", "").strip(),
-                    scope=int(row.get("scope", "1").strip()) if row.get("scope") else 1,
-                    category=row.get("category", "").strip() or "stationary_combustion",
-                    substance=row.get("substance", "").strip() or "natural_gas",
-                    quantity=float(row.get("quantity", "0").strip() or "0"),
-                    unit=row.get("unit", "").strip() or "kWh",
-                    gas=row.get("gas", "").strip() or None,
-                    period_start=None
-                    if not row.get("period_start", "").strip()
-                    else None,  # simplified: no date parsing
-                    period_end=None
-                    if not row.get("period_end", "").strip()
-                    else None,  # simplified
-                    data_type=row.get("data_type", "primary").strip() or "primary",
-                    notes=row.get("notes", "").strip() or "",
+                activities.append(
+                    ActivityRecord(
+                        activity_id=(row.get("activity_id") or "").strip(),
+                        description=(row.get("description") or "").strip(),
+                        scope=int((row.get("scope") or "1").strip()),
+                        category=(row.get("category") or "").strip(),
+                        substance=(row.get("substance") or "").strip(),
+                        quantity=float((row.get("quantity") or "0").strip()),
+                        unit=(row.get("unit") or "").strip(),
+                        gas=(row.get("gas") or "").strip() or None,
+                        methane_basis=(row.get("methane_basis") or "").strip() or None,
+                        geography=(row.get("geography") or "GLOBAL").strip(),
+                        data_type=(row.get("data_type") or "primary").strip(),
+                        period_start=_parse_date(row.get("period_start")),
+                        period_end=_parse_date(row.get("period_end")),
+                        notes=(row.get("notes") or "").strip(),
+                    )
                 )
-                activities.append(a)
-            except Exception as exc:
-                print(f"Skipping row due to error: {exc}", file=sys.stderr)
+            except (OpenCarbonChemError, ValueError, TypeError) as exc:
+                raise ValueError(f"{csv_path} line {line_no}: {exc}") from exc
     return activities
 
 
-def _load_factors(csv_path: str | None) -> FactorRegistry:
-    """Load emission factors from the packaged seed CSV; fall back to default."""
-    default_path = "src/opencarbonchem/factors/data/illustrative_factors.csv"
-    path = csv_path or default_path
-    try:
-        return FactorRegistry.from_csv(path)
-    except Exception:
-        # fallback to in-memory default factors
-        from ..factors import FactorRegistry as FR
-        return FR.from_csv()
-
-
-def _run_calculation(
-    activities: list[ActivityRecord], factors: FactorRegistry, gwp_set: str
-) -> tuple[list, OrganizationReport]:
-    """Run Scope 1 calculation and return results + organisation report."""
-    scope1_results = calculate_scope1(activities, factors)
-    report = OrganizationReport.from_results([scope1_results])
-    return scope1_results.results, report
-
-
-def _run_excel(
+def calculate_inventory(
     activities: list[ActivityRecord],
-    factors: FactorRegistry,
-    gwp_set: str,
-    run_id: str,
-    period_label: str,
-) -> None:
-    """Run calculation and emit an Excel workbook."""
-    results, report = _run_calculation(activities, factors, gwp_set)
-    excel = build_excel_report(
-        report,
-        results,
-        gwp_set=gwp_set,
-        run_id=run_id,
-        period_label=period_label,
-    )
-    out_path = f"{run_id}.xlsx"
-    excel.save(out_path)
-    print(f"Excel report written to {out_path}")
+    registry: FactorRegistry,
+    *,
+    gwp_set: str = DEFAULT_GWP_SET,
+) -> tuple[OrganizationReport, list]:
+    """Run every scope present in ``activities`` and roll them up."""
+    by_scope: dict[int, list[ActivityRecord]] = {1: [], 2: [], 3: []}
+    for activity in activities:
+        by_scope[activity.scope].append(activity)
 
+    scope_results: list[ScopeResult] = []
+    if by_scope[1]:
+        scope_results.append(calculate_scope1(by_scope[1], registry, gwp_set=gwp_set))
+    if by_scope[2]:
+        # Scope 2 is reported location-based; market-based needs contract
+        # factors, which the CLI does not invent.
+        scope_results.append(
+            calculate_scope2(by_scope[2], registry, gwp_set=gwp_set).location
+        )
+    if by_scope[3]:
+        scope_results.append(calculate_scope3(by_scope[3], registry, gwp_set=gwp_set))
 
-def _run_pdf(
-    activities: list[ActivityRecord],
-    factors: FactorRegistry,
-    gwp_set: str,
-    run_id: str,
-    period_label: str,
-    organisation_name: str = "OpenCarbonChem Demo",
-) -> None:
-    """Run calculation and emit a PDF executive summary."""
-    results, report = _run_calculation(activities, factors, gwp_set)
-    pdf = build_pdf_report(
-        report,
-        results,
-        gwp_set=gwp_set,
-        run_id=run_id,
-        period_label=period_label,
-        organisation_name=organisation_name,
-    )
-    out_path = f"{run_id}.pdf"
-    pdf.save(out_path)
-    print(f"PDF report written to {out_path}")
+    report = OrganizationReport.from_results(scope_results)
+    rows = [row for result in scope_results for row in result.results]
+    return report, rows
 
 
 def main(argv: list[str] | None = None) -> int:
     """Entry point for the ``opencarbonchem`` console script."""
     parser = argparse.ArgumentParser(
         prog="opencarbonchem",
-        description="OpenCarbonChem — carbon accounting and sustainability analytics",
+        description=(
+            "OpenCarbonChem — carbon accounting and sustainability analytics for "
+            "chemical and process industries"
+        ),
     )
     sub = parser.add_subparsers(dest="command")
 
-    # ---- calculate ---- #
-    calc_parser = sub.add_parser("calculate", help="Run calculation and emit reports")
-    calc_parser.add_argument(
-        "--activities",
-        required=True,
-        help="Path to CSV file with activity data (see --help for expected columns)",
-    )
-    calc_parser.add_argument(
-        "--gwp-set",
-        default="AR6",
-        help="GWP set to use (AR6, AR5, AR6-ERRATA-2025)",
-    )
-    calc_parser.add_argument(
-        "--run-id",
-        required=True,
-        help="Identifier for the calculation run (used as output filename prefix)",
-    )
-    calc_parser.add_argument(
-        "--period-label",
-        default="",
-        help="Label for the reporting period (e.g. '2024-01-01 to 2024-12-31')",
-    )
-    calc_parser.add_argument(
-        "--organisation-name",
-        default="OpenCarbonChem Demo",
-        help="Organisation name for PDF reports",
-    )
-    calc_parser.add_argument(
-        "--report-types",
-        nargs="+",
-        choices=["excel", "pdf"],
-        default=["excel", "pdf"],
-        help="Report types to generate",
-    )
-
-    # ---- help ---- #
-    parser.print_help = lambda: print(parser.format_help())
+    calc = sub.add_parser("calculate", help="Run the inventory and write reports")
+    calc.add_argument("--activities", required=True,
+                      help="Activity-data CSV (columns as in data/activities_synthetic.csv)")
+    calc.add_argument("--factors", default=None,
+                      help="Emission-factor CSV; defaults to the packaged seed set")
+    calc.add_argument("--run-id", required=True,
+                      help="Run identifier, used as the report filename prefix")
+    calc.add_argument("--gwp-set", default=DEFAULT_GWP_SET, choices=_GWP_SETS,
+                      help=f"GWP set to apply (default {DEFAULT_GWP_SET})")
+    calc.add_argument("--period-label", default="",
+                      help="Reporting-period label for the report header")
+    calc.add_argument("--organisation-name", default="OpenCarbonChem Demo",
+                      help="Organisation name for the PDF report")
+    calc.add_argument("--report-types", nargs="+", choices=["excel", "pdf"],
+                      default=["excel", "pdf"], help="Reports to generate")
+    calc.add_argument("--out", default=".", help="Output directory for the reports")
 
     args = parser.parse_args(argv)
-
     if args.command is None:
         parser.print_help()
         return 1
 
     try:
-        factors = _load_factors(args.activities)
-
-        activities = _load_activities(args.activities)
-
+        registry = FactorRegistry.from_csv(args.factors)
+        activities = load_activities(args.activities)
         if not activities:
-            print("No activities loaded; nothing to calculate.", file=sys.stderr)
+            print("No activity records found; nothing to calculate.", file=sys.stderr)
             return 1
 
+        report, rows = calculate_inventory(activities, registry, gwp_set=args.gwp_set)
+        print(f"Scope 1: {report.by_scope().get(1, 0.0):,.3f} kg CO2e")
+        print(f"Scope 2: {report.by_scope().get(2, 0.0):,.3f} kg CO2e")
+        print(f"Scope 3: {report.by_scope().get(3, 0.0):,.3f} kg CO2e")
+        print(f"Total:   {report.total_kg:,.3f} kg CO2e ({report.total_t:,.3f} t)")
+
+        for gap in report.reconcile().coverage_gaps:
+            print(f"Coverage note: {gap.detail}", file=sys.stderr)
+
+        out_dir = Path(args.out)
+        out_dir.mkdir(parents=True, exist_ok=True)
+
         if "excel" in args.report_types:
-            _run_excel(activities, factors, args.gwp_set, args.run_id, args.period_label)
+            from .reporting import build_excel_report
+
+            path = out_dir / f"{args.run_id}.xlsx"
+            build_excel_report(
+                report, rows, gwp_set=args.gwp_set, run_id=args.run_id,
+                period_label=args.period_label,
+            ).save(str(path))
+            print(f"Excel report: {path}")
 
         if "pdf" in args.report_types:
-            _run_pdf(
-                activities,
-                factors,
-                args.gwp_set,
-                args.run_id,
-                args.period_label,
-                args.organisation_name,
-        )
+            from .reporting import build_pdf_report
 
-    except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
-        traceback.print_exc()
-        return 1
+            path = out_dir / f"{args.run_id}.pdf"
+            build_pdf_report(
+                report, rows, gwp_set=args.gwp_set, run_id=args.run_id,
+                period_label=args.period_label,
+                organisation_name=args.organisation_name,
+            ).save(str(path))
+            print(f"PDF report: {path}")
+
+    except OpenCarbonChemError as exc:
+        print(f"Calculation failed: {exc}", file=sys.stderr)
+        return 2
+    except (OSError, ValueError) as exc:
+        print(f"Input error: {exc}", file=sys.stderr)
+        return 2
 
     return 0
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     sys.exit(main())

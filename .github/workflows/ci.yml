@@ -2,54 +2,41 @@ name: OpenCarbonChem CI
 
 on:
   push:
-    branches: [main, main]
+    branches: [main, master]
   pull_request:
-    branches: [main, main]
+    branches: [main, master]
+  workflow_dispatch:
 
 jobs:
   test:
-    runs-on: windows-latest
-    defaults:
-      run:
-        shell: "C:\\Users\\admin\\AppData\\Local\\Microsoft\\WindowsApps\\python.exe -c "import sys; sys.path.insert(0, r'D:\OneDrive\OneDrive\Josh PC\OpenCarbonChem\src'); "
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
-      - name: Run tests
+      - name: Run the test suite
         run: python -m pytest -q
 
-      - name: Validate Excel report generation
+      - name: Verify the CLI entry point
         run: |
-          python -c "
-import sys
-sys.path.insert(0, r'D:\OneDrive\OneDrive\Josh PC\OpenCarbonChem\src')
-from opencarbonchem.reporting.excel_workbook import build_excel_report
-from opencarbonchem.accounting import OrganizationReport
-from opencarbonchem.core.calc import EmissionResult
-print('Excel reconciliation test passed')
-"
-
-      - name: Validate PDF report generation
-        run: |
-          python -c "
-import sys
-sys.path.insert(0, r'D:\OneDrive\OneDrive\Josh PC\OpenCarbonChem\src')
-from opencarbonchem.reporting.pdf_generator import build_pdf_report
-print('PDF generation test passed')
-"
-
-      - name: Validate CLI
-        run: python -m pytest -q
-
-workflow_dispatch: {}
+          opencarbonchem --help > /dev/null
+          opencarbonchem calculate \
+            --activities data/activities_synthetic.csv \
+            --run-id ci-smoke \
+            --out build/reports
+          test -f build/reports/ci-smoke.xlsx
+          test -f build/reports/ci-smoke.pdf

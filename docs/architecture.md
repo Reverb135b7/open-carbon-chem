@@ -236,7 +236,17 @@ Rules:
   (geography/gas/year), missing/ambiguous errors.
 - `tests/test_accounting.py` — scope classification, Scope 1 aggregation,
   Scope 2 location vs market, 15 Scope 3 categories.
-- `tests/test_database.py` — schema init, activity and result round-trips.
+- `tests/test_database.py` — schema init, activity, result and boundary round-trips.
+- `tests/test_boundary.py`, `test_aggregate.py`, `test_comparison.py` — boundary
+  consolidation, organisation roll-up/reconciliation, reporting-year comparison.
+- `tests/test_pcf.py` — product definition, stage/boundary rules, allocation,
+  double-counting guard.
+- `tests/test_analytics.py` — hotspots, tornado sensitivity, Monte Carlo
+  reproducibility and percentiles.
+- `tests/test_scenarios.py` — all seven levers with hand-computed reductions,
+  adverse (negative-reduction) results, zero-baseline guard, persistence.
+- `tests/test_reporting.py` — Excel/PDF generation and the reconciliation guard.
+- `tests/test_cli.py` — CSV loading, three-scope roll-up, exit codes.
 - Expected values are calculated independently (by hand) in the test, not
   copied from the implementation.
 
@@ -253,12 +263,12 @@ Rules:
 | 5 | Corporate GHG accounting | **Done** (Scope 1/2/3 catalogue, `OrganisationalBoundary` + consolidation, `OrganizationReport` reconciliation, `PeriodComparison`, boundary persistence) |
 | 6 | Product Carbon Footprint | **Done** (stage catalogue + boundary rules, `ProductDefinition`, `InventoryItem`, mass/economic/physical-causality/none allocation, PCF = Σ attributable CO2e / reference flow, double-counting guard vs corporate report, SQLite persistence, 28 tests) |
 | 7 | Hotspot, sensitivity and uncertainty analysis | **Done** (hotspot rankings by substance/category/scope/gas; one-at-a-time tornado sensitivity; Monte Carlo with seeded reproducibility, percentile ordering p5 ≤ median ≤ p95; variance-share contributions; >25 tests) |
-| 8 | Decarbonisation scenario modelling | **Done** (7 levers: renewable electricity, energy efficiency, fuel switching, material substitution, waste reduction, process optimisation, transport optimisation; baseline/scenario comparison with absolute and % reduction; ScenarioError on unknown/zero-lever; persistence via CarbonDatabase; engine_run and compare_scenarios helpers) |
-| 9 | Streamlit interface | Pending |
+| 8 | Decarbonisation scenario modelling | **Done** (7 levers as pure `entries -> entries` transforms; `apply_lever` / `run_levers` recompute both totals through the engine; `compare_scenarios` returns baseline/scenario/reduction; `reduction_pct = None` for a zero baseline; `ScenarioError` when a lever is invalid or matches no rows; persistence via `save_scenario` / `save_scenario_results`; 36 tests) |
+| 9 | Streamlit interface | **Done** (11 pages, Overview → Report Generation, thin clients over the package API; all pages execute cleanly under `streamlit.testing` AppTest) |
 | 10 | Reporting (PDF/Excel), documentation, full test suite | **Done** (Excel workbook with reconciliation guard, PDF executive summary, CLI entry point,
     LICENSE/CONTRIBUTING.md, methodology/assumptions/data-dictionary/provenance-policy/validation
     protocol docs; 125 tests passing) |
-| 11 | Final integration and GitHub publication | Pending |
+| 11 | Final integration and GitHub publication | **Done locally** (CI workflow, LICENSE, CONTRIBUTING, methodology/assumptions/data-dictionary/provenance/validation docs, notebooks/, reports/). Publishing to GitHub awaits the repository owner's authorisation. |
 
 At the end of every milestone: run the test suite, check calculation
 consistency, update this roadmap, list completed features and outstanding
