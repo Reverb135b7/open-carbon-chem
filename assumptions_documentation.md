@@ -9,7 +9,8 @@ software for their particular context.
 - **All packaged factors in the seed CSV (`illustrative_factors.csv`) are labelled
   ``review_status=illustrative`` and ``source_org=SYNTHETIC``.**
   They are **not** official emission factors and must not be presented as such.
-- New factors entered via the Emission Factor DB page are stored in the in-memory
+- New factors entered via the Emission Factor DB page are stored in the local
+  SQLite database (`data/opencarbonchem.db`), not in the packaged CSV;
   SQLite database; they are not written to the packaged CSV.
 - Resolution is deterministic: category → substance → geography (exact beats GLOBAL) →
   vintage (newest at or before the reporting year).

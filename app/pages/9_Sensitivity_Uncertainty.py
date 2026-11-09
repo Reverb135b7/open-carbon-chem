@@ -10,25 +10,20 @@ from __future__ import annotations
 import streamlit as st
 import pandas as pd
 from pathlib import Path
-from typing import List
 
 from opencarbonchem.analytics import (
-    analyse_sensitivity, build_parameters, default_distributions,
-    InputDistribution, run_monte_carlo, SensitivityParameter,
+    analyse_sensitivity, build_parameters, InputDistribution, run_monte_carlo,
 )
 from opencarbonchem.core.activity import ActivityRecord
 from opencarbonchem.factors import FactorRegistry
-from opencarbonchem.core.inventory import validate_entries, base_rows
-from opencarbonchem.core.calc import compute_emissions
-from opencarbonchem.factors.models import EmissionFactor
+from opencarbonchem.core.inventory import validate_entries
 from opencarbonchem.core.exceptions import AnalyticsError, UncertaintyError
-from datetime import date
 
 DATA = Path(__file__).parent.parent / "data" / "raw" / "synthetic"
-DEFAULT_CSV = Path(__file__).parent.parent / "src" / "opencarbonchem" / "factors" / "data" / "illustrative_factors.csv"
+DEFAULT_CSV = Path(__file__).parent.parent.parent / "src" / "opencarbonchem" / "factors" / "data" / "illustrative_factors.csv"
 
 
-st.set_page_config(page_title="OpenCarbonChem — Sensitivity & Uncertainty", page_icon"📊", layout="wide")
+st.set_page_config(page_title="OpenCarbonChem — Sensitivity & Uncertainty", page_icon="📊", layout="wide")
 st.title("📊 Sensitivity & Uncertainty")
 
 
@@ -78,14 +73,19 @@ with col_left:
 
     # Parameter generation
     st.write("**Generate parameters**")
-    with_stdev = st.checkbox("Include default delta_pct = 10 %", value=True)
-    if st.button("Generate sensitivity parameters") or True:
-        params = build_parameters(inventory, delta_pct=10 if with_stdev else 5)
-        st.session_state["sensitivity_params"] = params
-        st.info(f"Generated {len(params)} parameters (delta_pct = {10 if with_stdev else 5} %).")
+    delta_choice = st.selectbox("Perturb every input by +/- (%)", options=[5, 10, 20], index=1)
+    if st.button("Generate sensitivity parameters"):
+        st.session_state["sensitivity_params"] = build_parameters(
+            inventory, delta_pct=delta_choice
+        )
+    # Default to a generated set so the analysis is usable on first render.
+    params = st.session_state.setdefault(
+        "sensitivity_params", build_parameters(inventory, delta_pct=delta_choice)
+    )
+    st.info(f"{len(params)} parameters prepared (each shrunk and grown by {delta_choice} %).")
 
     # Run analysis
-    if "sensitivity_params" in st.session_state:
+    if True:
         params = st.session_state["sensitivity_params"]
         if st.button("Run sensitivity analysis"):
             with st.spinner("Running one‑at‑a‑time perturbations..."):
@@ -107,16 +107,21 @@ with col_left:
                     )
                     st.dataframe(rows_df, use_container_width=True)
                     # Plotly bar chart of swings
-                    try import plotly.express as px
-                    fig = px.bar(
-                        rows_df.head(10),
-                        x="Swing (kg)",
-                        y="Parameter",
-                        orientation="h",
-                        title="Top 10 sensitivity swings (kg CO₂e)",
-                        text_auto=".1f",
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
+                    try:
+                        import plotly.express as px
+                    except Exception:
+                        px = None
+                    
+                    if px is not None:
+                        fig = px.bar(
+                            rows_df.head(10),
+                            x="Swing (kg)",
+                            y="Parameter",
+                            orientation="h",
+                            title="Top 10 sensitivity swings (kg CO2e)",
+                            text_auto=".1f",
+                        )
+                        st.plotly_chart(fig, width="stretch")
                 except AnalyticsError as e:
                     st.error(f"Sensitivity analysis failed: {e}")
                 except Exception as e:
@@ -143,20 +148,29 @@ with col_right:
                                help="Same seed ⇒ identical results.")
         dist_kind = st.selectbox("Distribution kind", options=["normal", "lognormal",
                                                                "triangular", "uniform", "fixed"])
+        field = st.selectbox(
+            "Uncertain input",
+            options=["factor_value", "quantity"],
+            format_func=lambda f: "Emission factor" if f == "factor_value" else "Activity quantity",
+        )
         spread_pct = st.number_input("Spread (%)", min_value=0.0, max_value=99.0, value=15.0,
                                      step=1.0,
-                                     help="Relative half‑width / σ for the distribution.")
+                                     help="Relative half-width / standard deviation.")
         submitted = st.form_submit_button("Run Monte Carlo")
 
         if submitted:
             try:
-                dists = [InputDistribution(
-                    name=f"input · {dist_kind}",
-                    activity_id=invid,
-                    field="factor_value" if dist_kind != "quantity" else "quantity",
-                    kind=dist_kind,
-                    spread_pct=spread_pct,
-                ) for invid, _ in inventory]
+                # Names must be unique per input: the engine rejects duplicates.
+                dists = [
+                    InputDistribution(
+                        name=f"{activity.activity_id} · {field}",
+                        activity_id=activity.activity_id,
+                        field=field,
+                        kind=dist_kind,
+                        spread_pct=spread_pct,
+                    )
+                    for activity, _factor in inventory
+                ]
                 with st.spinner("Running Monte Carlo propagation..."):
                     result = run_monte_carlo(inventory, dists, n_draws=n_draws, seed=seed)
                 st.success("Monte Carlo complete.")

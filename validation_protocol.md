@@ -123,7 +123,7 @@ Before a release is tagged, the following must be complete:
     validation_protocol.md) exist and are properly formatted.
 - [ ] The README.md is up‑to‑date and references all documentation files.
 - [ ] The roadmap in ``docs/architecture.md`` has all rows 1‑10 populated (or explicitly deferred).
-- [ ] The dashboard (11 pages) is operational and all 125 tests pass.
+- [ ] The dashboard (11 pages) is operational and the full test suite passes.
 - [ ] A `STATUS.md` file exists at the project root with the current status summary.
 
 ## 8. Release Checklist (continued)

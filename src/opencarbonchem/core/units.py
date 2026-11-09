@@ -147,7 +147,7 @@ class Dimension:
             if power is None:
                 continue
             base = BASE_UNIT_NAME[symbol]
-            text = base if power == 1 else (base if power == -1 else f"{base}^{power}")
+            text = base if abs(power) == 1 else f"{base}^{abs(power)}"
             (num if power > 0 else den).append(text)
         rendered = " ".join(num) or "1"
         if den:
@@ -290,8 +290,8 @@ class UnitRegistry:
             aliases=["unit", "units", "each", "pce", "vehicle", "trip", "shipment", "item", "seat", "ton_km_packet"])
         reg("USD", {"CUR": 1}, 1.0, kind="base", aliases=["$", "us$", "dollar", "dollars", "usd"])
         # -- composite transport units -------------------------------------
-        reg("tkm", {"M": 1, "L": 1}, 1000.0, aliases=["tonne-km", "tonne km", "ton-km", "tkm"],
-            note="tonne kilometre = 1000 kg*m")
+        reg("tkm", {"M": 1, "L": 1}, 1e6, aliases=["tonne-km", "tonne km", "ton-km", "tkm"],
+            note="tonne kilometre = 1 tonne x 1 km = 1e6 kg*m")
         reg("pkm", {"CNT": 1, "L": 1}, 1000.0, aliases=["passenger-km", "passenger km", "pkm"],
             note="passenger kilometre = 1000 piece*m")
         reg("tonmi", {"M": 1, "L": 1}, 907.18474 * 1609.344, aliases=["ton-mile", "ton mile"])
@@ -343,7 +343,8 @@ class UnitRegistry:
         return parse_unit(expression, self)
 
     def known(self) -> list[str]:
-        return sorted(set(self._exact) | set(self._alias.values().__iter__().__self.__len__() and set()))
+        """Every exact symbol and alias known to the registry."""
+        return sorted(set(self._exact) | set(self._alias))
 
     def symbols(self) -> list[str]:
         return sorted(self._exact)
@@ -479,8 +480,11 @@ class Quantity:
 
     def __mul__(self, other: "Quantity | float") -> "Quantity":
         if isinstance(other, Quantity):
-            return Quantity(self.base_value * other.base_value, self.unit * other.unit, self.label)
-        return Quantity(self.base_value * float(other), self.unit, self.label)
+            unit = self.unit * other.unit
+            return Quantity(self.base_value * other.base_value / unit.scale, unit, self.label)
+        # Scaling keeps the unit, so the *displayed* value is scaled, not the
+        # coherent base magnitude (q(2, "km") * 3 is 6 km, not 6000 km).
+        return Quantity(self.value * float(other), self.unit, self.label)
 
     def __rmul__(self, other: float) -> "Quantity":
         return self.__mul__(other)
@@ -489,10 +493,11 @@ class Quantity:
         if isinstance(other, Quantity):
             if other.is_zero():
                 raise ZeroDivisionError("Division by a zero quantity")
-            return Quantity(self.base_value / other.base_value, self.unit / other.unit, self.label)
+            unit = self.unit / other.unit
+            return Quantity(self.base_value / other.base_value / unit.scale, unit, self.label)
         if float(other) == 0:
             raise ZeroDivisionError("Division by zero")
-        return Quantity(self.base_value / float(other), self.unit, self.label)
+        return Quantity(self.value / float(other), self.unit, self.label)
 
     def __neg__(self) -> "Quantity":
         return Quantity(-self.value, self.unit, self.label)

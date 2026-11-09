@@ -14,10 +14,9 @@ require the replacement factor to be supplied with its own provenance record.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Callable, ClassVar, Iterable
 
-from ..core.activity import ActivityRecord
 from ..core.exceptions import ScenarioError
 from ..core.inventory import InventoryEntry
 from ..factors.models import EmissionFactor
@@ -85,19 +84,19 @@ class Lever:
         return tuple(result)
 
     @staticmethod
-    def _scale(entry: InventoryEntry, multiplier: float, *, field: str) -> InventoryEntry:
+    def _scale(
+        entry: InventoryEntry, multiplier: float, *, field: str
+    ) -> InventoryEntry | None:
+        """Scale a quantity or factor; ``None`` drops a now zero-emission row."""
         activity, factor = entry
         if field == "quantity":
             return activity.model_copy(update={"quantity": activity.quantity * multiplier}), factor
         value = factor.value * multiplier
         if value <= 0:
-            # A zero-emission factor means the contribution disappears entirely.
-            raise _ZeroFactor()
+            # A zero-emission factor means the contribution disappears entirely;
+            # dropping the row is the only honest representation of that.
+            return None
         return activity, factor.model_copy(update={"value": value})
-
-
-class _ZeroFactor(Exception):
-    """Internal signal: the transformed factor has zero emissions."""
 
 
 @dataclass(frozen=True)

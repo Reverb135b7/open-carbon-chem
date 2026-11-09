@@ -6,7 +6,7 @@
 2. **Create a branch** for your feature or bugfix: `git checkout -b feature/xyz`.
 3. **Implement your change** following the existing code style and conventions.
 4. **Add or update tests** for new functionality — all new features must have passing tests.
-5. **Run the full test suite**: `python -m pytest` (all 125 tests must pass).
+5. **Run the full test suite**: `python -m pytest` (the full suite must pass).
 6. **Commit** with a clear message: `git commit -m "feat: add XYZ"`.
 7. **Push** to your fork and open a pull request.
 

@@ -198,3 +198,34 @@ def test_scope3_rejects_invalid_category(registry):
 def test_scope3_rejects_other_scopes(registry):
     with pytest.raises(BoundaryError):
         calculate_scope3([_act(scope=1)], registry)
+
+
+@pytest.mark.unit
+def test_scope_result_rejects_rows_from_another_scope(registry):
+    from opencarbonchem.accounting import ScopeResult
+    from opencarbonchem.core.exceptions import BoundaryError
+
+    scope1 = calculate_scope1([_act()], registry)
+    with pytest.raises(BoundaryError, match="being reported as Scope 2"):
+        ScopeResult.from_results(2, scope1.results)
+
+
+@pytest.mark.integration
+def test_demo_dataset_applies_refrigerant_gwp():
+    """R-134a leakage must be converted with its GWP, not a pre-combined CO2e factor."""
+    from pathlib import Path
+
+    from opencarbonchem.accounting import calculate_inventory
+    from opencarbonchem.core.activity import load_activities_csv
+    from opencarbonchem.factors import FactorRegistry, default_seed_path
+
+    csv_path = Path(__file__).resolve().parent.parent / "data" / "activities_synthetic.csv"
+    registry = FactorRegistry.from_csv(default_seed_path())
+    report, rows = calculate_inventory(load_activities_csv(csv_path), registry)
+
+    refrigerant = next(r for r in rows if r.activity_id == "ACT-003")
+    assert refrigerant.gas == "HFC134a"
+    # 500 kg charge x 1.5 % leak = 7.5 kg R-134a x AR6 GWP 1530
+    assert refrigerant.co2e_kg == pytest.approx(11_475.0)
+    assert report.by_scope()[1] == pytest.approx(4_555_075.0)
+    assert report.total_kg == pytest.approx(5_547_075.0)

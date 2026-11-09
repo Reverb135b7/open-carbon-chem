@@ -308,8 +308,6 @@ def test_duplicate_stage_rules_rejected(registry):
 def corporate_report(registry: FactorRegistry) -> OrganizationReport:
     """Corporate inventory containing only the manufacturing row (90 kg)."""
     mfg = activity("A-MFG", "stationary_combustion", "natural_gas", 500, "kWh", gas="CO2")
-    factor = registry.find(activity_category="stationary_combustion",
-                           substance="natural_gas", year=2024, gas="CO2")
     return OrganizationReport.from_results([calculate_scope1([mfg], registry)])
 
 
@@ -426,3 +424,80 @@ def test_pcf_line_requires_stored_activity_and_factor(registry):
         db.init_schema()
         with pytest.raises(PCFError, match="must be saved first"):
             db.save_pcf_line("PCF-TEST-001", result.items[0])
+
+
+def test_default_allocation_rule_can_be_persisted(registry):
+    """A rule with stage=None applies to every stage and must be storable."""
+    from opencarbonchem.pcf import AllocationRule
+
+    rule = AllocationRule(method="mass", basis_value=1, basis_total=4, basis_unit="kg")
+    assert rule.is_default
+
+    with CarbonDatabase(":memory:") as db:
+        db.init_schema()
+        db.save_pcf_definition(product())
+        db.save_allocation_rule(product().pcf_id, rule)
+
+        stored = db.list_allocation_rules(product().pcf_id)
+        assert len(stored) == 1
+        assert stored[0].stage is None
+        assert stored[0].share == pytest.approx(0.25)
+
+
+def test_legacy_schema_is_migrated_to_allow_a_null_stage(tmp_path):
+    """Databases created before the fix declared stage NOT NULL."""
+    path = tmp_path / "legacy.db"
+    db = CarbonDatabase(path)
+    db.init_schema()
+    db._conn.executescript(
+        """
+        DROP TABLE allocation_rules;
+        CREATE TABLE allocation_rules (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            pcf_id TEXT NOT NULL,
+            stage TEXT NOT NULL,
+            method TEXT NOT NULL,
+            basis_value REAL,
+            basis_total REAL,
+            basis_unit TEXT,
+            notes TEXT NOT NULL DEFAULT ''
+        );
+        """
+    )
+    db._conn.commit()
+    db.close()
+
+    migrated = CarbonDatabase(path)
+    migrated.init_schema()
+    columns = {
+        row["name"]: row["notnull"]
+        for row in migrated._conn.execute("PRAGMA table_info(allocation_rules)")
+    }
+    assert columns["stage"] == 0
+    migrated.close()
+
+
+def test_stored_pcf_totals_include_allocation(registry):
+    """The stored allocated total must equal PCFResult.total_kg."""
+    items = five_stage_inventory(registry)
+    rules = [AllocationRule(method="mass", stage="manufacturing", basis_value=600,
+                            basis_total=1000, basis_unit="kg")]
+    result = calculate_pcf(product(), items, allocation_rules=rules)
+
+    with CarbonDatabase(":memory:") as db:
+        db.init_schema()
+        for item in items:
+            db.save_factor(item.factor)
+            db.save_activity(item.activity)
+        db.save_pcf_result(result, rules)
+
+        assert db.pcf_total_kg(product().pcf_id) == pytest.approx(1600.0)
+        assert db.pcf_allocated_total_kg(product().pcf_id) == pytest.approx(result.total_kg)
+        lines = db.list_pcf_lines(product().pcf_id)
+        assert sum(line["allocated_kg"] for line in lines) == pytest.approx(result.total_kg)
+
+
+def test_duplicate_activity_in_a_pcf_inventory_is_rejected(registry):
+    items = five_stage_inventory(registry)
+    with pytest.raises(PCFError, match="appears in both"):
+        calculate_pcf(product(), [*items, items[0]])

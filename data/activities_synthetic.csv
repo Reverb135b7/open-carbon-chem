@@ -1,7 +1,7 @@
 activity_id,description,scope,category,substance,quantity,unit,gas,methane_basis,geography,data_type,period_start,period_end,notes
 ACT-001,Natural gas fired boiler and heaters,1,stationary_combustion,natural_gas,500000,kWh,CO2,,GLOBAL,primary,2024-01-01,2024-12-31,SYNTHETIC demo data for a fictional chemical facility.
 ACT-002,Diesel powered fork-lifts and yard vehicles,1,mobile_combustion,diesel,20000,L,CO2,,GLOBAL,primary,2024-01-01,2024-12-31,SYNTHETIC demo data for a fictional chemical facility.
-ACT-003,Refrigerant leakage from process chiller (R-134a),1,fugitive_emissions,r134a,500,kg,CO2e,,GLOBAL,primary,2024-01-01,2024-12-31,SYNTHETIC demo data for a fictional chemical facility.
+ACT-003,Refrigerant leakage from process chiller (R-134a),1,fugitive_emissions,r134a,500,kg,,,GLOBAL,primary,2024-01-01,2024-12-31,SYNTHETIC demo data for a fictional chemical facility.
 ACT-004,Limestone fed to process line (calcination CO2),1,process_emissions,limestone,10000,t,CO2,,GLOBAL,primary,2024-01-01,2024-12-31,SYNTHETIC demo data for a fictional chemical facility.
 ACT-005,Purchased grid electricity for site operations,2,purchased_electricity,grid_electricity,2000000,kWh,CO2e,,GLOBAL,primary,2024-01-01,2024-12-31,SYNTHETIC demo data for a fictional chemical facility.
 ACT-006,Purchased steam from adjacent utility plant,2,purchased_steam,steam,50000,kg,CO2e,,GLOBAL,secondary,2024-01-01,2024-12-31,SYNTHETIC demo data for a fictional chemical facility.

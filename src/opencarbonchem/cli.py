@@ -17,19 +17,14 @@ never prints a total it could not derive.
 from __future__ import annotations
 
 import argparse
-import csv
 import sys
-from datetime import date
 from pathlib import Path
 
 from .accounting import (
     OrganizationReport,
-    ScopeResult,
-    calculate_scope1,
-    calculate_scope2,
-    calculate_scope3,
+    calculate_inventory as accounting_calculate_inventory,
 )
-from .core.activity import ActivityRecord
+from .core.activity import ActivityRecord, load_activities_csv
 from .core.exceptions import OpenCarbonChemError
 from .core.gwp import DEFAULT_GWP_SET
 from .factors import FactorRegistry
@@ -39,45 +34,9 @@ __all__ = ["main"]
 _GWP_SETS = ("AR6", "AR5", "AR6-ERRATA-2025")
 
 
-def _parse_date(value: str | None) -> date | None:
-    text = (value or "").strip()
-    if not text:
-        return None
-    return date.fromisoformat(text)
-
-
 def load_activities(csv_path: str | Path) -> list[ActivityRecord]:
-    """Load activity records from a CSV whose columns match ``ActivityRecord``.
-
-    A malformed row is a hard error: silently skipping it would drop activity
-    data from the inventory without telling anyone.
-    """
-    activities: list[ActivityRecord] = []
-    with Path(csv_path).open(newline="", encoding="utf-8-sig") as handle:
-        reader = csv.DictReader(handle)
-        for line_no, row in enumerate(reader, start=2):
-            try:
-                activities.append(
-                    ActivityRecord(
-                        activity_id=(row.get("activity_id") or "").strip(),
-                        description=(row.get("description") or "").strip(),
-                        scope=int((row.get("scope") or "1").strip()),
-                        category=(row.get("category") or "").strip(),
-                        substance=(row.get("substance") or "").strip(),
-                        quantity=float((row.get("quantity") or "0").strip()),
-                        unit=(row.get("unit") or "").strip(),
-                        gas=(row.get("gas") or "").strip() or None,
-                        methane_basis=(row.get("methane_basis") or "").strip() or None,
-                        geography=(row.get("geography") or "GLOBAL").strip(),
-                        data_type=(row.get("data_type") or "primary").strip(),
-                        period_start=_parse_date(row.get("period_start")),
-                        period_end=_parse_date(row.get("period_end")),
-                        notes=(row.get("notes") or "").strip(),
-                    )
-                )
-            except (OpenCarbonChemError, ValueError, TypeError) as exc:
-                raise ValueError(f"{csv_path} line {line_no}: {exc}") from exc
-    return activities
+    """Load activity records from a CSV (strict: a malformed row is an error)."""
+    return load_activities_csv(csv_path)
 
 
 def calculate_inventory(
@@ -87,25 +46,7 @@ def calculate_inventory(
     gwp_set: str = DEFAULT_GWP_SET,
 ) -> tuple[OrganizationReport, list]:
     """Run every scope present in ``activities`` and roll them up."""
-    by_scope: dict[int, list[ActivityRecord]] = {1: [], 2: [], 3: []}
-    for activity in activities:
-        by_scope[activity.scope].append(activity)
-
-    scope_results: list[ScopeResult] = []
-    if by_scope[1]:
-        scope_results.append(calculate_scope1(by_scope[1], registry, gwp_set=gwp_set))
-    if by_scope[2]:
-        # Scope 2 is reported location-based; market-based needs contract
-        # factors, which the CLI does not invent.
-        scope_results.append(
-            calculate_scope2(by_scope[2], registry, gwp_set=gwp_set).location
-        )
-    if by_scope[3]:
-        scope_results.append(calculate_scope3(by_scope[3], registry, gwp_set=gwp_set))
-
-    report = OrganizationReport.from_results(scope_results)
-    rows = [row for result in scope_results for row in result.results]
-    return report, rows
+    return accounting_calculate_inventory(activities, registry, gwp_set=gwp_set)
 
 
 def main(argv: list[str] | None = None) -> int:

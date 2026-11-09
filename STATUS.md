@@ -1,33 +1,64 @@
-# OpenCarbonChem Implementation Status
+# OpenCarbonChem — implementation status
 
-## Project Overview
-OpenCarbonChem — open-source carbon accounting and sustainability analytics engine for chemical/process industries.
+All eleven milestones of the handover guide are implemented and tested locally.
+Publication to GitHub is the one remaining step and needs the repository owner's
+authorisation.
 
-## Milestones Completed (1–9)
-- **M1–M5**: Architecture, unit conversion engine, GWP sets (AR6/AR5), factor registry, SQLite persistence, Scope 1/2/3 corporate accounting with reconciliation
-- **M6**: Product Carbon Footprint — stage catalogue, boundary enforcement (cradle→gate/grave), allocation methods, double-counting guard, persistence
-- **M7**: Hotspot rankings (5 dimensions), one‑at‑a‑time tornado sensitivity, Monte Carlo uncertainty (5 distributions, seeded reproducibility, variance‑share contributions)
-- **M8**: 7 decarbonisation levers (renewable electricity, energy efficiency, fuel switching, material substitution, waste reduction, process optimisation, transport optimisation); baseline/scenario comparison (absolute & % reduction)
-- **M9**: 11‑page Streamlit dashboard (Overview → Report Generation) — thin client, synthetic data throughout, clear SYNTHETIC labels
+## Milestones
 
-## Test Suite
-- **125 tests** across all modules — all green
-- Test files: `tests/test_pcf.py`, `tests/test_analytics.py`, plus 97 original M1–M5 tests
+| # | Scope | State |
+|---|-------|-------|
+| 1 | Requirements and architecture | Done (`docs/architecture.md`) |
+| 2 | Database schema, activity data | Done (`database/schema.sql`, `store.py`, `ActivityRecord`) |
+| 3 | Emission factors and units | Done (`core/units.py`, `factors/`) |
+| 4 | Calculation engine | Done (`core/calc.py`, `core/gwp.py`, `core/inventory.py`) |
+| 5 | Corporate accounting | Done (Scope 1/2/3, boundary, roll-up, comparison) |
+| 6 | Product carbon footprint | Done (`pcf/`) |
+| 7 | Hotspots, sensitivity, Monte Carlo | Done (`analytics/`) |
+| 8 | Decarbonisation scenarios | Done (`scenarios/`) |
+| 9 | Streamlit dashboard (11 pages) | Done (`app/`) |
+| 10 | Reporting, CLI, documentation | Done (`reporting/`, `cli.py`) |
+| 11 | Final integration | Done locally; publication pending owner authorisation |
 
-## Key Design Principles (from handover §15/§16)
-- Scientific correctness: values traceable to IPCC/national grids, no invented factors
-- Engineering accuracy: dimensional unit engine refuses incompatible conversions
-- Transparent accounting: every `EmissionResult` records AD, EF, factor ID, gas, GWP set
-- Reproducible calculations: same seed → identical Monte Carlo output
-- No double counting: corporate inventory and PCF cross‑checked via `excluded_from_corporate` flag
-- Fail-safe: invalid data raises typed errors; never silently defaults
+## Verification
 
-## Next Steps (M10–M11)
-- PDF report generator (ReportLab) + Excel report generator (openpyxl) with reconciliation guard
-- Full documentation: `LICENSE`, `CONTRIBUTING.md`, methodology/assumptions/data-dictionary/provenance-policy/validation-protocol
-- CLI entry point: `opencarbonchem calculate --activities ... --out ...`
-- GitHub publication (repository: `opencarbonchem`) with user authorization
-- Final integration run: corporate inventory + PCF + hotspots + uncertainty + scenario + generated report
+- `python -m pytest` → **219 passed**.
+- `python -m compileall -q src app` → clean.
+- `ruff check src app --select F,E9` → no undefined names or unused imports.
+- CLI: `opencarbonchem calculate --activities data/activities_synthetic.csv --run-id demo --out build/reports`
+  writes an `.xlsx` and a `.pdf`; the totals (Scope 1 4,555,075 kg,
+  Scope 2 910,000 kg, Scope 3 82,000 kg) match the package API.
+- Every dashboard page and every action button was executed through
+  `streamlit.testing.v1.AppTest`; results were compared with the package API.
 
----
-**All 125 tests pass. Ready for M10–M11 or GitHub publication.**
+## Data
+
+- `data/activities_synthetic.csv` — 10 synthetic activity rows (Scope 1/2/3).
+- `src/opencarbonchem/factors/data/illustrative_factors.csv` — 14 factors, every
+  row `review_status=illustrative`, `source_org=SYNTHETIC`.
+
+Neither dataset is official and none of the output is an ESG disclosure.
+
+## Known limitations
+
+1. **No real emission factors are bundled.** Real use requires importing a
+   published factor set with full provenance; the packaged rows are illustrative.
+2. **Connectors (DEFRA / EPA / Ecoinvent) are stubs.** They return no live
+   factors, make no claim of licensed access, and never feed a calculation.
+3. **Scope 2 market-based** totals require explicit contract/residual-mix
+   factors; the engine never substitutes a grid average.
+4. **Dashboard persistence** is a local SQLite file (`data/opencarbonchem.db`,
+   git-ignored) with no authentication; it is a demonstration workspace.
+5. **Scenario results** are stored per scenario total, not broken down by
+   category.
+
+## Design rules in force
+
+- Typed errors (`OpenCarbonChemError`) instead of silent defaults.
+- `E = AD × EF` computed once in `core/calc.py`; every higher layer recomputes
+  through it.
+- Every result row carries the activity, factor, gas and GWP set needed to
+  re-derive it.
+- Reports refuse to be generated when their rows do not reconcile with the
+  report total.
+- Synthetic data is labelled `SYNTHETIC` and never presented as official.

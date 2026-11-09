@@ -1,6 +1,11 @@
 """Corporate GHG accounting: Scope 1, Scope 2 and Scope 3."""
 
-from .aggregate import OrganizationReport, Reconciliation, ReconciliationCheck
+from .aggregate import (
+    OrganizationReport,
+    Reconciliation,
+    ReconciliationCheck,
+    calculate_inventory,
+)
 from .base import ScopeResult
 from .boundary import CONSOLIDATION_METHODS, BoundaryEntity, OrganisationalBoundary
 from .comparison import ComparisonLine, PeriodComparison, compare_line, compare_periods
@@ -16,6 +21,7 @@ __all__ = [
     "BoundaryEntity",
     "ComparisonLine",
     "OrganizationReport",
+    "calculate_inventory",
     "OrganisationalBoundary",
     "PeriodComparison",
     "Reconciliation",

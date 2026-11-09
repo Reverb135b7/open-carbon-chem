@@ -17,12 +17,22 @@ from dataclasses import dataclass
 from math import isclose
 from typing import Iterable
 
+from ..core.activity import ActivityRecord
+from ..core.calc import EmissionResult
 from ..core.exceptions import BoundaryError
+from ..core.gwp import DEFAULT_GWP_SET
+from ..factors.registry import FactorRegistry
 from .base import ScopeResult
-from .scope1 import SCOPE1_CATEGORIES
-from .scope2 import SCOPE2_CATEGORIES
+from .scope1 import SCOPE1_CATEGORIES, calculate_scope1
+from .scope2 import SCOPE2_CATEGORIES, calculate_scope2
+from .scope3 import calculate_scope3
 
-__all__ = ["OrganizationReport", "Reconciliation", "ReconciliationCheck"]
+__all__ = [
+    "OrganizationReport",
+    "Reconciliation",
+    "ReconciliationCheck",
+    "calculate_inventory",
+]
 
 _VALID_SCOPES = (1, 2, 3)
 
@@ -168,3 +178,35 @@ class OrganizationReport:
                         )
                     )
         return Reconciliation(checks=tuple(checks))
+
+
+def calculate_inventory(
+    activities: Iterable[ActivityRecord],
+    registry: FactorRegistry,
+    *,
+    gwp_set: str = DEFAULT_GWP_SET,
+) -> tuple[OrganizationReport, list[EmissionResult]]:
+    """Compute every scope that has rows and return the report plus its rows.
+
+    A scope with no activity data is left out of the report rather than reported
+    as zero; :meth:`OrganizationReport.reconcile` then flags it as a coverage
+    gap. Scope 2 is the location-based method (market-based needs explicit
+    contract factors, which this helper does not invent).
+    """
+    by_scope: dict[int, list[ActivityRecord]] = {1: [], 2: [], 3: []}
+    for activity in activities:
+        by_scope[activity.scope].append(activity)
+
+    scope_results: list[ScopeResult] = []
+    if by_scope[1]:
+        scope_results.append(calculate_scope1(by_scope[1], registry, gwp_set=gwp_set))
+    if by_scope[2]:
+        scope_results.append(
+            calculate_scope2(by_scope[2], registry, gwp_set=gwp_set).location
+        )
+    if by_scope[3]:
+        scope_results.append(calculate_scope3(by_scope[3], registry, gwp_set=gwp_set))
+
+    report = OrganizationReport.from_results(scope_results)
+    rows = [row for result in scope_results for row in result.results]
+    return report, rows

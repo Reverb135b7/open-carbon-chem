@@ -9,14 +9,16 @@ rather than surfacing later as a wrong number.
 
 from __future__ import annotations
 
+import csv
 from datetime import date
+from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from .exceptions import PeriodError
+from .exceptions import OpenCarbonChemError, PeriodError
 
-__all__ = ["ActivityRecord"]
+__all__ = ["ActivityRecord", "load_activities_csv"]
 
 Scope = Literal[1, 2, 3]
 DataType = Literal["primary", "secondary"]
@@ -92,3 +94,43 @@ class ActivityRecord(BaseModel):
         if self.period_end is not None:
             return self.period_end.year
         return None
+
+
+def load_activities_csv(path: str | Path) -> list[ActivityRecord]:
+    """Load activity records from a CSV whose columns match :class:`ActivityRecord`.
+
+    A malformed row is a hard error naming its line: silently skipping or
+    defaulting a row would drop or alter activity data without telling anyone.
+    """
+    def text(row: dict, column: str) -> str:
+        return (row.get(column) or "").strip()
+
+    def optional_date(row: dict, column: str) -> date | None:
+        value = text(row, column)
+        return date.fromisoformat(value) if value else None
+
+    records: list[ActivityRecord] = []
+    with Path(path).open(newline="", encoding="utf-8-sig") as handle:
+        for line_no, row in enumerate(csv.DictReader(handle), start=2):
+            try:
+                records.append(
+                    ActivityRecord(
+                        activity_id=text(row, "activity_id"),
+                        description=text(row, "description"),
+                        scope=int(text(row, "scope")),
+                        category=text(row, "category"),
+                        substance=text(row, "substance"),
+                        quantity=float(text(row, "quantity")),
+                        unit=text(row, "unit"),
+                        gas=text(row, "gas") or None,
+                        methane_basis=text(row, "methane_basis") or None,
+                        geography=text(row, "geography") or "GLOBAL",
+                        data_type=text(row, "data_type") or "primary",
+                        period_start=optional_date(row, "period_start"),
+                        period_end=optional_date(row, "period_end"),
+                        notes=text(row, "notes"),
+                    )
+                )
+            except (OpenCarbonChemError, ValueError, TypeError) as exc:
+                raise ValueError(f"{path} line {line_no}: {exc}") from exc
+    return records

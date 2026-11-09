@@ -16,7 +16,7 @@ from typing import Iterable, Literal
 from ..accounting.aggregate import OrganizationReport
 from ..core.calc import EmissionResult
 from ..core.exceptions import AnalyticsError
-from ..pcf.calculator import PCFLineItem, PCFResult
+from ..pcf.calculator import PCFResult
 
 __all__ = [
     "Hotspot",

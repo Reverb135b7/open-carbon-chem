@@ -53,11 +53,45 @@ class CarbonDatabase:
     def _migrate(self) -> None:
         """Bring databases created by earlier milestones up to the current schema."""
         allocation_columns = {
-            row["name"]
+            row["name"]: row
             for row in self._conn.execute("PRAGMA table_info(allocation_rules)")
         }
         if "basis_total" not in allocation_columns:
             self._conn.execute("ALTER TABLE allocation_rules ADD COLUMN basis_total REAL")
+        # A default allocation rule has no stage (stage IS NULL). Older schemas
+        # declared stage NOT NULL, which made such a rule unstorable; SQLite
+        # cannot drop NOT NULL in place, so rebuild the table when needed.
+        stage_column = allocation_columns.get("stage")
+        if stage_column is not None and stage_column["notnull"]:
+            self._conn.executescript(
+                """
+                CREATE TABLE allocation_rules_rebuilt (
+                    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                    pcf_id       TEXT NOT NULL REFERENCES pcf_definitions(id),
+                    stage        TEXT,
+                    method       TEXT NOT NULL
+                                 CHECK (method IN ('mass', 'economic', 'physical_causality', 'none')),
+                    basis_value  REAL,
+                    basis_total  REAL,
+                    basis_unit   TEXT,
+                    notes        TEXT NOT NULL DEFAULT ''
+                );
+                INSERT INTO allocation_rules_rebuilt
+                    (id, pcf_id, stage, method, basis_value, basis_total, basis_unit, notes)
+                    SELECT id, pcf_id, stage, method, basis_value, basis_total, basis_unit, notes
+                    FROM allocation_rules;
+                DROP TABLE allocation_rules;
+                ALTER TABLE allocation_rules_rebuilt RENAME TO allocation_rules;
+                """
+            )
+        # Allocation output columns (pre-allocation kg is kept for the audit).
+        inventory_columns = {
+            row["name"] for row in self._conn.execute("PRAGMA table_info(pcf_inventory)")
+        }
+        if "allocation_share" not in inventory_columns:
+            self._conn.execute("ALTER TABLE pcf_inventory ADD COLUMN allocation_share REAL")
+        if "allocated_kg" not in inventory_columns:
+            self._conn.execute("ALTER TABLE pcf_inventory ADD COLUMN allocated_kg REAL")
 
     # -- emission factors --------------------------------------------------- #
     def save_factor(self, factor: EmissionFactor) -> None:
@@ -327,11 +361,12 @@ class CarbonDatabase:
                 """
                 INSERT INTO pcf_inventory (
                     pcf_id, stage, activity_id, factor_id, co2e_kg,
-                    excluded_from_corporate
-                ) VALUES (?, ?, ?, ?, ?, ?)
+                    allocation_share, allocated_kg, excluded_from_corporate
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (pcf_id, line.stage, line.activity_id, line.factor_id,
-                 line.co2e_kg, int(line.excluded_from_corporate)),
+                 line.co2e_kg, line.allocation_share, line.allocated_kg,
+                 int(line.excluded_from_corporate)),
             )
             self._conn.commit()
         except sqlite3.IntegrityError as exc:
@@ -356,7 +391,8 @@ class CarbonDatabase:
     def list_pcf_lines(self, pcf_id: str) -> list[dict]:
         """Stored inventory rows (numbers as persisted, not recomputed)."""
         rows = self._conn.execute(
-            "SELECT stage, activity_id, factor_id, co2e_kg, excluded_from_corporate "
+            "SELECT stage, activity_id, factor_id, co2e_kg, allocation_share, "
+            "allocated_kg, excluded_from_corporate "
             "FROM pcf_inventory WHERE pcf_id = ? ORDER BY id",
             (pcf_id,),
         ).fetchall()
@@ -366,14 +402,36 @@ class CarbonDatabase:
                 "activity_id": row["activity_id"],
                 "factor_id": row["factor_id"],
                 "co2e_kg": row["co2e_kg"],
+                "allocation_share": (
+                    1.0 if row["allocation_share"] is None else row["allocation_share"]
+                ),
+                # Rows written before allocation was persisted carry no
+                # allocated value; fall back to the unallocated contribution.
+                "allocated_kg": (
+                    row["co2e_kg"] if row["allocated_kg"] is None else row["allocated_kg"]
+                ),
                 "excluded_from_corporate": bool(row["excluded_from_corporate"]),
             }
             for row in rows
         ]
 
     def pcf_total_kg(self, pcf_id: str) -> float:
+        """Unallocated life-cycle total (kg CO2e) as stored for the PCF."""
         row = self._conn.execute(
             "SELECT COALESCE(SUM(co2e_kg), 0) AS total FROM pcf_inventory WHERE pcf_id = ?",
+            (pcf_id,),
+        ).fetchone()
+        return float(row["total"])
+
+    def pcf_allocated_total_kg(self, pcf_id: str) -> float:
+        """Allocated total (kg CO2e attributable to the product).
+
+        This is the stored equivalent of ``PCFResult.total_kg``; it differs from
+        :meth:`pcf_total_kg` whenever an allocation rule applies.
+        """
+        row = self._conn.execute(
+            "SELECT COALESCE(SUM(COALESCE(allocated_kg, co2e_kg)), 0) AS total "
+            "FROM pcf_inventory WHERE pcf_id = ?",
             (pcf_id,),
         ).fetchone()
         return float(row["total"])

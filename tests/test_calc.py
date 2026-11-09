@@ -131,3 +131,53 @@ def test_result_carries_full_audit_trail():
 def test_selected_gwp_set_is_recorded():
     result = compute_emissions(_activity(), _factor(), gwp_set="AR5")
     assert result.gwp_set == "AR5"
+
+
+@pytest.mark.unit
+def test_explicit_gas_must_match_the_factor_gas():
+    # A CO2 factor must never stand in for a row declared as CH4.
+    activity = _activity(gas="CH4", methane_basis="fossil")
+    with pytest.raises(FactorScopeError, match="declares gas"):
+        compute_emissions(activity, _factor())
+
+
+@pytest.mark.unit
+def test_combined_co2e_factor_is_allowed_for_a_declared_gas():
+    result = compute_emissions(_activity(gas="CO2"), _factor(gas="CO2e", unit="kg CO2e/kWh"))
+    assert result.co2e_kg == pytest.approx(500.0)
+    assert result.gwp is None
+
+
+@pytest.mark.unit
+def test_batch_pairs_by_position_not_cross_product():
+    pandas = pytest.importorskip("pandas")
+    from opencarbonchem.core.calc import compute_emissions_batch
+
+    activities = [_activity(activity_id="A1"), _activity(activity_id="A2")]
+    factors = [_factor(factor_id="F1"), _factor(factor_id="F2")]
+    frame = compute_emissions_batch(activities, factors)
+    assert isinstance(frame, pandas.DataFrame)
+    assert list(frame["activity_id"]) == ["A1", "A2"]
+    assert list(frame["factor_id"]) == ["F1", "F2"]
+    assert list(frame["co2e_kg"]) == [pytest.approx(500.0), pytest.approx(500.0)]
+    assert (frame["error"] == "").all()
+
+
+@pytest.mark.unit
+def test_batch_length_mismatch_is_rejected():
+    from opencarbonchem.core.calc import compute_emissions_batch
+
+    with pytest.raises(ValueError, match="paired by position"):
+        compute_emissions_batch([_activity()], [])
+
+
+@pytest.mark.unit
+def test_batch_records_failures_when_validation_is_disabled():
+    from opencarbonchem.core.calc import compute_emissions_batch
+
+    frame = compute_emissions_batch(
+        [_activity(category="mobile_combustion")], [_factor()], validate=False
+    )
+    assert frame.loc[0, "co2e_kg"] is None
+    assert "FactorScopeError" == frame.loc[0, "validation_kind"]
+    assert frame.loc[0, "error"]

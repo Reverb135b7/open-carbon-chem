@@ -15,21 +15,18 @@ import pandas as pd
 from pathlib import Path
 
 from opencarbonchem.analytics import (
-    rank_emissions, report_hotspots, pcf_hotspots, product_carbon_intensity,
+    rank_emissions, pcf_hotspots, product_carbon_intensity,
 )
 from opencarbonchem.core.activity import ActivityRecord
 from opencarbonchem.factors import FactorRegistry
-from opencarbonchem.accounting import OrganizationReport
 from opencarbonchem.pcf import ProductDefinition, InventoryItem, calculate_pcf
-from opencarbonchem.database import CarbonDatabase
 from opencarbonchem.core.calc import compute_emissions
-from datetime import date
 
-DATA = Path(__file__).parent.parent / "data" / "raw" / "synthetic"
-DEFAULT_CSV = Path(__file__).parent.parent / "src" / "opencarbonchem" / "factors" / "data" / "illustrative_factors.csv"
+DATA = Path(__file__).parent.parent.parent / "data" / "raw" / "synthetic"
+DEFAULT_CSV = Path(__file__).parent.parent.parent / "src" / "opencarbonchem" / "factors" / "data" / "illustrative_factors.csv"
 
 
-st.set_page_config(page_title="OpenCarbonChem — Hotspot Analysis", page_icon"🔍", layout="wide")
+st.set_page_config(page_title="OpenCarbonChem — Hotspot Analysis", page_icon="🔍", layout="wide")
 st.title("🔍 Hotspot Analysis")
 
 
@@ -61,10 +58,21 @@ with col_left:
                 ActivityRecord(activity_id="A-S3-002", scope=3, category="s3_cat04",
                                substance="road_freight", quantity=2000, unit="tkm"),
             ]
-            results = [compute_emissions(a, reg.find(activity_category=a.category,
-                                                  substance=a.substance,
-                                                  year=2024, gas=a.gas))
-                       for a in activities if a.gas or a.category != "stationary_combustion"]
+            # geography="GLOBAL" keeps the GB grid factor from tying with the GLOBAL
+            # one; without it the lookup is correctly ambiguous and raises.
+            results = [
+                compute_emissions(
+                    a,
+                    reg.find(
+                        activity_category=a.category,
+                        substance=a.substance,
+                        geography="GLOBAL",
+                        year=2024,
+                        gas=a.gas,
+                    ),
+                )
+                for a in activities
+            ]
             # Run hotspot rankings
             dims = ["substance", "category", "scope", "gas", "activity"]
             st.write("**Hotspot rankings (corporate):**")
@@ -105,14 +113,16 @@ with col_left:
                         stage="raw_materials",
                         activity=ActivityRecord(activity_id="A-RAW", scope=3, category="s3_cat01",
                                                 substance="paper", quantity=1000, unit="kg"),
-                        factor=_load_seed().find(activity_category="s3_cat01", substance="paper", year=2024),
+                        factor=_load_seed().find(activity_category="s3_cat01", substance="paper",
+                                                 geography="GLOBAL", year=2024),
                     ),
                     InventoryItem(
                         stage="manufacturing",
                         activity=ActivityRecord(activity_id="A-MFG", scope=1, category="stationary_combustion",
                                                 substance="natural_gas", quantity=500, unit="kWh", gas="CO2"),
                         factor=_load_seed().find(activity_category="stationary_combustion",
-                                                 substance="natural_gas", year=2024, gas="CO2"),
+                                                 substance="natural_gas", geography="GLOBAL",
+                                                 year=2024, gas="CO2"),
                     ),
                 ]
                 pcf = calculate_pcf(prod, items)
