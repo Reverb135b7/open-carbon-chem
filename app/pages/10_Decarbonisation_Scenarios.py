@@ -107,8 +107,8 @@ def _demo_inventory(registry: FactorRegistry):
                         substance="road_freight", quantity=2000, unit="tkm",
                         data_type="secondary", **PERIOD), "s3_cat04", "road_freight", None),
         (ActivityRecord(activity_id="A-WASTE", scope=3, category="s3_cat05",
-                        substance="mixed_waste", quantity=1000, unit="kg",
-                        data_type="secondary", **PERIOD), "s3_cat05", "mixed_waste", None),
+                        substance="mixed_waste_landfill", quantity=1000, unit="kg",
+                        data_type="secondary", **PERIOD), "s3_cat05", "mixed_waste_landfill", None),
         (ActivityRecord(activity_id="A-PROC", scope=1, category="process_emissions",
                         substance="limestone", quantity=1000, unit="kg", gas="CO2",
                         data_type="primary", **PERIOD),
@@ -149,7 +149,7 @@ col_left, col_right = st.columns([2, 1])
 with col_left:
     st.subheader("Baseline inventory (synthetic)")
     st.caption(
-        "Synthetic activity data x illustrative seed factors (SYNTHETIC). "
+        "Synthetic activity data x packaged published factors (DESNZ 2024 / IPCC 2006). "
         "Not a real facility inventory."
     )
     if st.button("Load baseline", type="primary"):

@@ -16,7 +16,10 @@ DESNZ set and use the matching `reporting_year`.
 Source page: <https://www.gov.uk/government/publications/greenhouse-gas-reporting-conversion-factors-2024>
 (full set spreadsheet `ghg-conversion-factors-2024-full_set__for_advanced_users__v1_1.xlsx`).
 
-## Packaged factors
+## Core factors used by the demo
+
+The rows below are the ones the synthetic demo dataset resolves. Every other row in the packaged CSV carries the same provenance fields; the Coverage table lists their keys and the Emission Factor DB page shows every row's exact reference.
+
 
 | ID | Category / substance | Value | Unit | Geography | Source and location |
 |----|----------------------|-------|------|-----------|---------------------|
@@ -34,6 +37,27 @@ Source page: <https://www.gov.uk/government/publications/greenhouse-gas-reportin
 
 IPCC reference: <https://www.ipcc-nggip.iges.or.jp/public/2006gl/pdf/3_Volume3/V3_2_Ch2_Mineral_Industry.pdf>
 (the EFDB entry 2.A.4.d records the same 0.43971 t CO2/t for CaCO3).
+
+## Coverage
+
+The packaged set contains **88 factors**. Substances are lowercase snake_case keys; waste and freight entries name their treatment or load band so a factor cannot be applied to the wrong activity.
+
+| Category | Substances (with packaged factors) |
+|---|---|
+| `fugitive_emissions` | `hfc125`, `hfc143a`, `hfc152a`, `hfc227ea`, `hfc23`, `hfc32`, `nf3`, `r134a`, `r404a`, `r407a`, `r407c`, `r407f`, `r410a`, `sf6` |
+| `mobile_combustion` | `diesel_blend`, `diesel_mineral`, `petrol_blend`, `petrol_mineral` |
+| `process_emissions` | `dolomite`, `limestone`, `magnesite`, `siderite`, `soda_ash` |
+| `purchased_electricity` | `grid_electricity` |
+| `purchased_heat` | `heat` |
+| `purchased_steam` | `steam` |
+| `s3_cat01` | `aggregates`, `aluminium_cans`, `bricks`, `concrete`, `glass`, `paper`, `paper_board`, `paper_mixed`, `plasterboard`, `plastics_average`, `plastics_hdpe`, `plastics_pet`, `plastics_pp`, `plastics_pvc`, `steel_cans`, `water_supply`, `wood` |
+| `s3_cat03` | `electricity_td` |
+| `s3_cat04` | `hgv_100`, `rail_freight`, `road_freight`, `sea_bulk`, `sea_container`, `sea_tanker` |
+| `s3_cat05` | `food_waste_composting`, `food_waste_landfill`, `household_waste_combustion`, `household_waste_landfill`, `metal_waste_recycling`, `mixed_waste_combustion`, `mixed_waste_landfill`, `paper_waste_landfill`, `paper_waste_recycling`, `plastic_waste_recycling`, `water_treatment` |
+| `s3_cat06` | `air_domestic`, `air_domestic_no_rf`, `air_long_haul`, `air_long_haul_no_rf`, `air_short_haul`, `air_short_haul_no_rf`, `bus`, `coach`, `light_rail`, `rail_international`, `rail_national` |
+| `stationary_combustion` | `aviation_turbine_fuel`, `burning_oil`, `coal_industrial`, `fuel_oil`, `gas_oil`, `lpg`, `natural_gas` |
+
+Enter one of these substance keys with the matching unit and `GB` geography on the Activity Data page. IPCC process factors are `GLOBAL` and are found by fallback. The Activity Data and Emission Factor DB pages list this catalogue directly.
 
 ## Choices and conversions that matter
 

@@ -8,7 +8,7 @@ uncertainty analysis and decarbonisation scenario modelling. The calculation
 engine is independent of any user interface and every reported number carries
 the activity record, emission factor and GWP set that produced it.
 
-> **Status:** all eleven milestones are implemented and tested (222 tests):
+> **Status:** all eleven milestones are implemented and tested (234 tests):
 > corporate Scope 1/2/3 accounting, product carbon footprints, analytics,
 > scenarios, dashboard, reporting and CLI (see
 > [`docs/architecture.md`](docs/architecture.md) for the roadmap). Not yet
@@ -116,7 +116,9 @@ reports/    generated output
 - The packaged factor CSV (`src/opencarbonchem/factors/data/published_factors.csv`)
   holds **published** values (DESNZ 2024 full set, IPCC 2006 defaults), each with a
   document reference and `review_status=published`; see
-  [`docs/FACTOR_SOURCES.md`](docs/FACTOR_SOURCES.md) for every value and caveat.
+  [`docs/FACTOR_SOURCES.md`](docs/FACTOR_SOURCES.md) for every value and caveat. The set
+  covers 88 factors: fuels, refrigerants, process carbonates, purchased energy and
+  losses, materials, waste treatments, freight modes, business travel and water.
 - The demo dataset (`data/activities_synthetic.csv`) is a fictional facility, clearly
   labelled `SYNTHETIC`; it must never be presented as a real inventory.
 - `src/opencarbonchem/factors/data/illustrative_factors.csv`

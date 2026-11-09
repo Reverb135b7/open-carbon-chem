@@ -56,7 +56,7 @@ def _demo_product() -> ProductDefinition:
 
 
 def _demo_items(registry: FactorRegistry) -> list[InventoryItem]:
-    """Five stages, all factors from the illustrative seed set (SYNTHETIC)."""
+    """Five stages, factors from the packaged published set (DESNZ 2024 / IPCC 2006)."""
     return [
         InventoryItem(
             stage="raw_materials",
@@ -100,9 +100,9 @@ def _demo_items(registry: FactorRegistry) -> list[InventoryItem]:
             stage="waste",
             activity=ActivityRecord(
                 activity_id="A-WST", scope=3, category="s3_cat05",
-                substance="mixed_waste", quantity=100, unit="kg",
+                substance="mixed_waste_landfill", quantity=100, unit="kg",
             ),
-            factor=registry.find(activity_category="s3_cat05", substance="mixed_waste", year=2024),
+            factor=registry.find(activity_category="s3_cat05", substance="mixed_waste_landfill", year=2024),
             excluded_from_corporate=True,
         ),
     ]
@@ -280,6 +280,6 @@ st.sidebar.markdown(
     "shared emissions genuinely exist; the share is recorded per line.\n"
     "- `excluded_from_corporate` marks contributions that are absent from the corporate "
     "inventory; a contradiction with a corporate report raises `DoubleCountingError`.\n"
-    "- All numbers use the illustrative seed factors (EF-ILL-*), which are explicitly "
-    "not official emission factors."
+    "- Factors are the packaged published values (DESNZ 2024 / IPCC 2006); each row "
+    "records its source reference and review status. The activity data are synthetic."
 )
