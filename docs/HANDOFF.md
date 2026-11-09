@@ -3,7 +3,7 @@
 **Audience:** the next AI agent or developer picking this up cold.
 **Last updated:** after the pre-publication audit. All eleven milestones of
 `OpenCarbonChem Guide from Chatgpt.txt` are implemented in the working tree;
-**234 tests pass** (`python -m pytest`).
+**238 tests pass** (`python -m pytest`).
 
 Read in this order:
 
@@ -62,7 +62,7 @@ These modules existed in commits but **had never been importable or tested**:
    and passed `leftIndent` to `Paragraph` instead of a `ParagraphStyle`. All fixed;
    `ExcelExportError` / `PDFExportError` now subclass `ExportError`.
 4. **New tests** for the repaired code: `tests/test_scenarios.py` (36), `tests/test_reporting.py` (7),
-   `tests/test_cli.py` (8). Suite: 149 → 200 at that point, 234 after the audit below.
+   `tests/test_cli.py` (8). Suite: 149 → 200 at that point, 238 after the audit below.
 
 ### 2.1 Pre-publication audit (this pass)
 
@@ -118,7 +118,7 @@ src/opencarbonchem/
 ├── database/    schema.sql store.py
 └── cli.py
 app/             1_Overview.py + pages/1–11
-tests/           14 modules, 234 tests
+tests/           14 modules, 238 tests
 docs/            architecture.md HANDOFF.md + connector/real-data notes
 (root)           methodology_documentation.md assumptions_documentation.md data_dictionary.md
                  emission_factor_provenance_policy.md validation_protocol.md STATUS.md
@@ -180,10 +180,12 @@ period, double-counting, PCF, allocation, scenario, uncertainty, analytics, reco
 
 1. **GitHub publication (M11).** The repo is committed locally with a CI workflow; pushing needs the
    owner's explicit authorisation. Repository name per guide §11: `opencarbonchem`.
-2. **Factors cover a UK-2024 slice.** `published_factors.csv` transcribes 88 DESNZ 2024
-   full set plus IPCC 2006 defaults for the substances the demo uses; other years, regions and
-   categories need their own published rows. DEFRA CO2e factors keep their AR5 basis, so a report
-   can mix AR5 combined values with AR6 gas conversions (`docs/FACTOR_SOURCES.md`).
+2. **Factors cover UK 2024 and 2025, not other regions.** `published_factors.csv` holds
+   91 DESNZ 2024 and 91 DESNZ 2025 rows generated from the flat-format workbooks, plus IPCC
+   2006 defaults; overseas electricity and other regions still need published rows of their
+   own. DEFRA CO2e factors keep their AR5 basis, so a report can mix AR5 combined values with
+   AR6 gas conversions; reports that do so now carry a "Mixed GWP basis" warning
+   (`docs/FACTOR_SOURCES.md`).
 3. **Scenario result granularity.** `scenario_results.category` is currently written as `""` — one row
    per scenario totals. A per-category breakdown would need the lever output grouped by category.
 4. **Connectors (DEFRA / EPA / Ecoinvent) are stubs.** They make no live fetch, hold no
@@ -236,7 +238,7 @@ period, double-counting, PCF, allocation, scenario, uncertainty, analytics, reco
 
 ## 8. Suggested next actions
 
-1. `python -m pytest` → expect **234 passed**.
+1. `python -m pytest` → expect **238 passed**.
 2. `python -m compileall -q src app` → clean.
 3. `PYTHONPATH=src python -m opencarbonchem.cli calculate --activities data/activities_synthetic.csv
    --run-id demo --out /tmp/demo` → totals above plus an `.xlsx` and `.pdf`.

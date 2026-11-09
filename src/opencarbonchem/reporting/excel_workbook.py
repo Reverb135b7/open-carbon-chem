@@ -26,7 +26,7 @@ from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
 from ..accounting.aggregate import OrganizationReport, ScopeResult
-from ..core.calc import EmissionResult
+from ..core.calc import EmissionResult, gwp_basis_note
 from ..core.exceptions import ReconciliationError
 
 # -- style helpers -------------------------------------------------------- #
@@ -146,6 +146,10 @@ class ExcelWorkbook:
         ws.cell(
             row=5, column=4, value=self.report.total_t
         ).font = _DETAIL_FONT
+        note = gwp_basis_note(self.emission_results)
+        if note:
+            ws.cell(row=6, column=1, value="GWP basis warning").font = _HEADER_FONT
+            ws.cell(row=6, column=2, value=note).font = _DETAIL_FONT
         _auto_width(ws, 1, 4)
 
     # -- scope detail sheets ---------------------------------------------- #

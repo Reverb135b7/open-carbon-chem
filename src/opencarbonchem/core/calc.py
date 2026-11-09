@@ -18,7 +18,7 @@ A factor whose gas is ``CO2e`` is already a combined factor; no GWP is applied
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable
 
 from ..factors.models import EmissionFactor
 from .activity import ActivityRecord
@@ -29,7 +29,7 @@ from .units import Dimension, Quantity, default_registry
 if TYPE_CHECKING:  # pandas stays an optional import at call time
     import pandas as pd
 
-__all__ = ["EmissionResult", "compute_emissions", "compute_emissions_batch"]
+__all__ = ["EmissionResult", "compute_emissions", "compute_emissions_batch", "gwp_basis_note"]
 
 _MASS = Dimension({"M": 1})
 
@@ -150,6 +150,29 @@ def compute_emissions(
         source_reference=factor.source_reference,
         review_status=factor.review_status,
         uncertainty_pct=factor.uncertainty_pct,
+    )
+
+
+def gwp_basis_note(results: Iterable[EmissionResult]) -> str | None:
+    """Describe a report that mixes embedded and engine-applied GWP bases.
+
+    Published CO2e factors (``gas="CO2e"``) carry the GWP applied by their
+    publisher -- DESNZ uses AR5 -- whereas gas-level factors are converted here
+    with the configured GWP set. Combining both in one total silently mixes
+    bases, so reporting surfaces this note when it happens.
+    """
+    results = tuple(results)
+    embedded = [r for r in results if r.gwp is None and r.gas.lower() == "co2e"]
+    converted = [r for r in results if r.gwp_set]
+    if not embedded or not converted:
+        return None
+    sets = ", ".join(sorted({str(r.gwp_set) for r in converted}))
+    return (
+        f"Mixed GWP basis: {len(embedded)} row(s) use CO2e factors with the "
+        "publisher's embedded GWP (DESNZ publishes on the AR5 basis), while "
+        f"{len(converted)} row(s) were converted here using {sets}. The totals "
+        "therefore combine two bases; use one basis throughout before reporting "
+        "externally."
     )
 
 
