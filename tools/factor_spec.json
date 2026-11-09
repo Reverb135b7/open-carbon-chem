@@ -1,0 +1,1737 @@
+[
+ {
+  "nn": 1,
+  "category": "stationary_combustion",
+  "substance": "natural_gas",
+  "unit": "kg CO2/kWh",
+  "gas": "CO2",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Fuels",
+   "l2": "Gaseous fuels",
+   "l3": "Natural gas",
+   "l4": "",
+   "col": "",
+   "uom": "kWh (Gross CV)",
+   "ghg": "kg CO2e of CO2 per unit"
+  },
+  "notes": "Gross CV basis as used for UK gas billing. CO2 component only; the total CO2e row is EF-DESNZ-2024-02."
+ },
+ {
+  "nn": 2,
+  "category": "stationary_combustion",
+  "substance": "natural_gas",
+  "unit": "kg CO2e/kWh",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Fuels",
+   "l2": "Gaseous fuels",
+   "l3": "Natural gas",
+   "l4": "",
+   "col": "",
+   "uom": "kWh (Gross CV)",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Total CO2e including the CH4 (0.00028) and N2O (0.00009) components."
+ },
+ {
+  "nn": 3,
+  "category": "mobile_combustion",
+  "substance": "diesel_mineral",
+  "unit": "kg CO2/L",
+  "gas": "CO2",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Fuels",
+   "l2": "Liquid fuels",
+   "l3": "Diesel (100% mineral diesel)",
+   "l4": "",
+   "col": "",
+   "uom": "litres",
+   "ghg": "kg CO2e of CO2 per unit"
+  },
+  "notes": "Fossil diesel with no biofuel blend"
+ },
+ {
+  "nn": 4,
+  "category": "fugitive_emissions",
+  "substance": "r134a",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Refrigerant & other",
+   "l2": "Kyoto protocol products",
+   "l3": "HFC-134a",
+   "l4": "",
+   "col": "Total emissions including non-Kyoto products",
+   "uom": "kg",
+   "ghg": "kg CO2e"
+  },
+  "notes": "GWP of 1300 on the AR5 basis as published. Apply to the mass of refrigerant released (top-up method)."
+ },
+ {
+  "nn": 5,
+  "category": "purchased_electricity",
+  "substance": "grid_electricity",
+  "unit": "kg CO2e/kWh",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "UK electricity",
+   "l2": "Electricity generated",
+   "l3": "Electricity: UK",
+   "l4": "kWh",
+   "col": "",
+   "uom": "kWh",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Location-based generation factor; excludes transmission and distribution losses"
+ },
+ {
+  "nn": 6,
+  "category": "purchased_steam",
+  "substance": "steam",
+  "unit": "kg CO2e/kWh",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Heat and steam",
+   "l2": "Heat and steam",
+   "l3": "District heat and steam",
+   "l4": "kWh",
+   "col": "",
+   "uom": "kWh",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Industry-average CHP fuel mix. Activity data must be kWh of steam energy"
+ },
+ {
+  "nn": 7,
+  "category": "s3_cat04",
+  "substance": "road_freight",
+  "unit": "kg CO2e/tkm",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Freighting goods",
+   "l2": "HGV (all diesel)",
+   "l3": "All HGVs",
+   "l4": "",
+   "col": "50% Laden",
+   "uom": "tonne.km",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Diesel HGV fleet at the 50 % laden band. The 100 % laden value is 0.07240 kg CO2e per tonne.km."
+ },
+ {
+  "nn": 8,
+  "category": "s3_cat06",
+  "substance": "air_short_haul",
+  "unit": "kg CO2e/pkm",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Business travel- air",
+   "l2": "Flights",
+   "l3": "Short-haul, to/from UK",
+   "l4": "Average passenger",
+   "col": "With RF",
+   "uom": "passenger.km",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Includes radiative forcing. The without-RF short-haul factor is 0.10974 kg CO2e per passenger.km."
+ },
+ {
+  "nn": 9,
+  "category": "s3_cat01",
+  "substance": "paper",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Material use",
+   "l2": "Paper",
+   "l3": "Paper and board: paper",
+   "l4": "",
+   "col": "Primary material production",
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Primary production of paper and board"
+ },
+ {
+  "nn": 10,
+  "category": "s3_cat05",
+  "substance": "mixed_waste_landfill",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Waste disposal",
+   "l2": "Refuse",
+   "l3": "Commercial and industrial waste",
+   "l4": "",
+   "col": "Landfill",
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Landfill treatment only. Combustion of the same waste type is 6.41061 kg CO2e per tonne."
+ },
+ {
+  "nn": 11,
+  "category": "stationary_combustion",
+  "substance": "lpg",
+  "unit": "kg CO2e/L",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Fuels",
+   "l2": "Gaseous fuels",
+   "l3": "LPG",
+   "l4": "",
+   "col": "",
+   "uom": "litres",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Litres basis."
+ },
+ {
+  "nn": 12,
+  "category": "stationary_combustion",
+  "substance": "lpg",
+  "unit": "kg CO2/L",
+  "gas": "CO2",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Fuels",
+   "l2": "Gaseous fuels",
+   "l3": "LPG",
+   "l4": "",
+   "col": "",
+   "uom": "litres",
+   "ghg": "kg CO2e of CO2 per unit"
+  },
+  "notes": "Litres basis."
+ },
+ {
+  "nn": 13,
+  "category": "stationary_combustion",
+  "substance": "fuel_oil",
+  "unit": "kg CO2e/L",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Fuels",
+   "l2": "Liquid fuels",
+   "l3": "Fuel oil",
+   "l4": "",
+   "col": "",
+   "uom": "litres",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Litres basis."
+ },
+ {
+  "nn": 14,
+  "category": "stationary_combustion",
+  "substance": "fuel_oil",
+  "unit": "kg CO2/L",
+  "gas": "CO2",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Fuels",
+   "l2": "Liquid fuels",
+   "l3": "Fuel oil",
+   "l4": "",
+   "col": "",
+   "uom": "litres",
+   "ghg": "kg CO2e of CO2 per unit"
+  },
+  "notes": "Litres basis."
+ },
+ {
+  "nn": 15,
+  "category": "stationary_combustion",
+  "substance": "burning_oil",
+  "unit": "kg CO2e/L",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Fuels",
+   "l2": "Liquid fuels",
+   "l3": "Burning oil",
+   "l4": "",
+   "col": "",
+   "uom": "litres",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Litres basis."
+ },
+ {
+  "nn": 16,
+  "category": "stationary_combustion",
+  "substance": "burning_oil",
+  "unit": "kg CO2/L",
+  "gas": "CO2",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Fuels",
+   "l2": "Liquid fuels",
+   "l3": "Burning oil",
+   "l4": "",
+   "col": "",
+   "uom": "litres",
+   "ghg": "kg CO2e of CO2 per unit"
+  },
+  "notes": "Litres basis."
+ },
+ {
+  "nn": 17,
+  "category": "stationary_combustion",
+  "substance": "gas_oil",
+  "unit": "kg CO2e/L",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Fuels",
+   "l2": "Liquid fuels",
+   "l3": "Gas oil",
+   "l4": "",
+   "col": "",
+   "uom": "litres",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Litres basis."
+ },
+ {
+  "nn": 18,
+  "category": "stationary_combustion",
+  "substance": "gas_oil",
+  "unit": "kg CO2/L",
+  "gas": "CO2",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Fuels",
+   "l2": "Liquid fuels",
+   "l3": "Gas oil",
+   "l4": "",
+   "col": "",
+   "uom": "litres",
+   "ghg": "kg CO2e of CO2 per unit"
+  },
+  "notes": "Litres basis."
+ },
+ {
+  "nn": 19,
+  "category": "stationary_combustion",
+  "substance": "aviation_turbine_fuel",
+  "unit": "kg CO2e/L",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Fuels",
+   "l2": "Liquid fuels",
+   "l3": "Aviation turbine fuel",
+   "l4": "",
+   "col": "",
+   "uom": "litres",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Litres basis; owned aircraft only."
+ },
+ {
+  "nn": 20,
+  "category": "stationary_combustion",
+  "substance": "coal_industrial",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Fuels",
+   "l2": "Solid fuels",
+   "l3": "Coal (industrial)",
+   "l4": "",
+   "col": "",
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Converted from kg CO2e per tonne. Published value is 2399.43994 kg per tonne."
+ },
+ {
+  "nn": 21,
+  "category": "stationary_combustion",
+  "substance": "coal_industrial",
+  "unit": "kg CO2/kg",
+  "gas": "CO2",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Fuels",
+   "l2": "Solid fuels",
+   "l3": "Coal (industrial)",
+   "l4": "",
+   "col": "",
+   "uom": "tonnes",
+   "ghg": "kg CO2e of CO2 per unit"
+  },
+  "notes": "Converted from kg CO2 per tonne. Published value is 2374.87 kg per tonne."
+ },
+ {
+  "nn": 22,
+  "category": "mobile_combustion",
+  "substance": "diesel_blend",
+  "unit": "kg CO2e/L",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Fuels",
+   "l2": "Liquid fuels",
+   "l3": "Diesel (average biofuel blend)",
+   "l4": "",
+   "col": "",
+   "uom": "litres",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Forecourt diesel; biogenic part is outside the scopes."
+ },
+ {
+  "nn": 23,
+  "category": "mobile_combustion",
+  "substance": "diesel_blend",
+  "unit": "kg CO2/L",
+  "gas": "CO2",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Fuels",
+   "l2": "Liquid fuels",
+   "l3": "Diesel (average biofuel blend)",
+   "l4": "",
+   "col": "",
+   "uom": "litres",
+   "ghg": "kg CO2e of CO2 per unit"
+  },
+  "notes": "Forecourt diesel CO2 component."
+ },
+ {
+  "nn": 24,
+  "category": "mobile_combustion",
+  "substance": "diesel_mineral",
+  "unit": "kg CO2e/L",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Fuels",
+   "l2": "Liquid fuels",
+   "l3": "Diesel (100% mineral diesel)",
+   "l4": "",
+   "col": "",
+   "uom": "litres",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Mineral diesel, net CV basis."
+ },
+ {
+  "nn": 25,
+  "category": "mobile_combustion",
+  "substance": "petrol_blend",
+  "unit": "kg CO2e/L",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Fuels",
+   "l2": "Liquid fuels",
+   "l3": "Petrol (average biofuel blend)",
+   "l4": "",
+   "col": "",
+   "uom": "litres",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Forecourt petrol; biogenic part is outside the scopes."
+ },
+ {
+  "nn": 26,
+  "category": "mobile_combustion",
+  "substance": "petrol_blend",
+  "unit": "kg CO2/L",
+  "gas": "CO2",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Fuels",
+   "l2": "Liquid fuels",
+   "l3": "Petrol (average biofuel blend)",
+   "l4": "",
+   "col": "",
+   "uom": "litres",
+   "ghg": "kg CO2e of CO2 per unit"
+  },
+  "notes": "Forecourt petrol CO2 component."
+ },
+ {
+  "nn": 27,
+  "category": "mobile_combustion",
+  "substance": "petrol_mineral",
+  "unit": "kg CO2e/L",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Fuels",
+   "l2": "Liquid fuels",
+   "l3": "Petrol (100% mineral petrol)",
+   "l4": "",
+   "col": "",
+   "uom": "litres",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Mineral petrol, net CV basis."
+ },
+ {
+  "nn": 28,
+  "category": "s3_cat03",
+  "substance": "electricity_td",
+  "unit": "kg CO2e/kWh",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Transmission and distribution",
+   "l2": "T&D- UK electricity",
+   "l3": "Electricity: UK",
+   "l4": "kWh",
+   "col": "",
+   "uom": "kWh",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Scope 3 transmission and distribution losses per kWh purchased."
+ },
+ {
+  "nn": 29,
+  "category": "purchased_heat",
+  "substance": "heat",
+  "unit": "kg CO2e/kWh",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Heat and steam",
+   "l2": "Heat and steam",
+   "l3": "Onsite heat and steam",
+   "l4": "kWh",
+   "col": "",
+   "uom": "kWh",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Onsite heat; industry-average CHP fuel mix."
+ },
+ {
+  "nn": 30,
+  "category": "fugitive_emissions",
+  "substance": "hfc23",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Refrigerant & other",
+   "l2": "Kyoto protocol products",
+   "l3": "HFC-23",
+   "l4": "",
+   "col": "Total emissions including non-Kyoto products",
+   "uom": "kg",
+   "ghg": "kg CO2e"
+  },
+  "notes": "GWP per kg released (AR5 basis as published)."
+ },
+ {
+  "nn": 31,
+  "category": "fugitive_emissions",
+  "substance": "hfc32",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Refrigerant & other",
+   "l2": "Kyoto protocol products",
+   "l3": "HFC-32",
+   "l4": "",
+   "col": "Total emissions including non-Kyoto products",
+   "uom": "kg",
+   "ghg": "kg CO2e"
+  },
+  "notes": "GWP per kg released (AR5 basis as published)."
+ },
+ {
+  "nn": 32,
+  "category": "fugitive_emissions",
+  "substance": "hfc125",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Refrigerant & other",
+   "l2": "Kyoto protocol products",
+   "l3": "HFC-125",
+   "l4": "",
+   "col": "Total emissions including non-Kyoto products",
+   "uom": "kg",
+   "ghg": "kg CO2e"
+  },
+  "notes": "GWP per kg released (AR5 basis as published)."
+ },
+ {
+  "nn": 33,
+  "category": "fugitive_emissions",
+  "substance": "hfc143a",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Refrigerant & other",
+   "l2": "Kyoto protocol products",
+   "l3": "HFC-143a",
+   "l4": "",
+   "col": "Total emissions including non-Kyoto products",
+   "uom": "kg",
+   "ghg": "kg CO2e"
+  },
+  "notes": "GWP per kg released (AR5 basis as published)."
+ },
+ {
+  "nn": 34,
+  "category": "fugitive_emissions",
+  "substance": "hfc152a",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Refrigerant & other",
+   "l2": "Kyoto protocol products",
+   "l3": "HFC-152a",
+   "l4": "",
+   "col": "Total emissions including non-Kyoto products",
+   "uom": "kg",
+   "ghg": "kg CO2e"
+  },
+  "notes": "GWP per kg released (AR5 basis as published)."
+ },
+ {
+  "nn": 35,
+  "category": "fugitive_emissions",
+  "substance": "hfc227ea",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Refrigerant & other",
+   "l2": "Kyoto protocol products",
+   "l3": "HFC-227ea",
+   "l4": "",
+   "col": "Total emissions including non-Kyoto products",
+   "uom": "kg",
+   "ghg": "kg CO2e"
+  },
+  "notes": "GWP per kg released (AR5 basis as published)."
+ },
+ {
+  "nn": 36,
+  "category": "fugitive_emissions",
+  "substance": "sf6",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Refrigerant & other",
+   "l2": "Kyoto protocol products",
+   "l3": "Sulphur hexafluoride (SF6)",
+   "l4": "",
+   "col": "Total emissions including non-Kyoto products",
+   "uom": "kg",
+   "ghg": "kg CO2e"
+  },
+  "notes": "GWP per kg released (AR5 basis as published)."
+ },
+ {
+  "nn": 37,
+  "category": "fugitive_emissions",
+  "substance": "nf3",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Refrigerant & other",
+   "l2": "Kyoto protocol products",
+   "l3": "Nitrogen trifluoride",
+   "l4": "",
+   "col": "Total emissions including non-Kyoto products",
+   "uom": "kg",
+   "ghg": "kg CO2e"
+  },
+  "notes": "GWP per kg released (AR5 basis as published)."
+ },
+ {
+  "nn": 38,
+  "category": "fugitive_emissions",
+  "substance": "r404a",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Refrigerant & other",
+   "l2": "Blends",
+   "l3": "R404A",
+   "l4": "",
+   "col": "Total emissions including non-Kyoto products",
+   "uom": "kg",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Blend GWP per kg released (AR5 basis as published)."
+ },
+ {
+  "nn": 39,
+  "category": "fugitive_emissions",
+  "substance": "r407a",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Refrigerant & other",
+   "l2": "Blends",
+   "l3": "R407A",
+   "l4": "",
+   "col": "Total emissions including non-Kyoto products",
+   "uom": "kg",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Blend GWP per kg released (AR5 basis as published)."
+ },
+ {
+  "nn": 40,
+  "category": "fugitive_emissions",
+  "substance": "r407c",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Refrigerant & other",
+   "l2": "Blends",
+   "l3": "R407C",
+   "l4": "",
+   "col": "Total emissions including non-Kyoto products",
+   "uom": "kg",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Blend GWP per kg released (AR5 basis as published)."
+ },
+ {
+  "nn": 41,
+  "category": "fugitive_emissions",
+  "substance": "r407f",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Refrigerant & other",
+   "l2": "Blends",
+   "l3": "R407F",
+   "l4": "",
+   "col": "Total emissions including non-Kyoto products",
+   "uom": "kg",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Blend GWP per kg released (AR5 basis as published)."
+ },
+ {
+  "nn": 42,
+  "category": "fugitive_emissions",
+  "substance": "r410a",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Refrigerant & other",
+   "l2": "Blends",
+   "l3": "R410A",
+   "l4": "",
+   "col": "Total emissions including non-Kyoto products",
+   "uom": "kg",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Blend GWP per kg released (AR5 basis as published)."
+ },
+ {
+  "nn": 43,
+  "category": "s3_cat01",
+  "substance": "water_supply",
+  "unit": "kg CO2e/m3",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Water supply",
+   "l2": "Water supply",
+   "l3": "Water supply",
+   "l4": "",
+   "col": "",
+   "uom": "cubic metres",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Potable water supplied, per cubic metre."
+ },
+ {
+  "nn": 44,
+  "category": "s3_cat05",
+  "substance": "water_treatment",
+  "unit": "kg CO2e/m3",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Water treatment",
+   "l2": "Water treatment",
+   "l3": "Water treatment",
+   "l4": "",
+   "col": "",
+   "uom": "cubic metres",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Waste water treated, per cubic metre."
+ },
+ {
+  "nn": 45,
+  "category": "s3_cat01",
+  "substance": "paper_mixed",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Material use",
+   "l2": "Paper",
+   "l3": "Paper and board: mixed",
+   "l4": "",
+   "col": "Primary material production",
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Converted from kg CO2e per tonne. Published value is 1282.74402 kg per tonne."
+ },
+ {
+  "nn": 46,
+  "category": "s3_cat01",
+  "substance": "paper_board",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Material use",
+   "l2": "Paper",
+   "l3": "Paper and board: board",
+   "l4": "",
+   "col": "Primary material production",
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Converted from kg CO2e per tonne. Published value is 1193.96586 kg per tonne."
+ },
+ {
+  "nn": 47,
+  "category": "s3_cat01",
+  "substance": "plastics_average",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Material use",
+   "l2": "Plastic",
+   "l3": "Plastics: average plastics",
+   "l4": "",
+   "col": "Primary material production",
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Converted from kg CO2e per tonne. Published value is 3164.78049 kg per tonne."
+ },
+ {
+  "nn": 48,
+  "category": "s3_cat01",
+  "substance": "plastics_hdpe",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Material use",
+   "l2": "Plastic",
+   "l3": "Plastics: HDPE (incl. forming)",
+   "l4": "",
+   "col": "Primary material production",
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Converted from kg CO2e per tonne. Published value is 3086.39038 kg per tonne."
+ },
+ {
+  "nn": 49,
+  "category": "s3_cat01",
+  "substance": "plastics_pet",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Material use",
+   "l2": "Plastic",
+   "l3": "Plastics: PET (incl. forming)",
+   "l4": "",
+   "col": "Primary material production",
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Converted from kg CO2e per tonne. Published value is 3854.91851 kg per tonne."
+ },
+ {
+  "nn": 50,
+  "category": "s3_cat01",
+  "substance": "plastics_pp",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Material use",
+   "l2": "Plastic",
+   "l3": "Plastics: PP (incl. forming)",
+   "l4": "",
+   "col": "Primary material production",
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Converted from kg CO2e per tonne. Published value is 2568.58892 kg per tonne."
+ },
+ {
+  "nn": 51,
+  "category": "s3_cat01",
+  "substance": "plastics_pvc",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Material use",
+   "l2": "Plastic",
+   "l3": "Plastics: PVC (incl. forming)",
+   "l4": "",
+   "col": "Primary material production",
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Converted from kg CO2e per tonne. Published value is 2935.77335 kg per tonne."
+ },
+ {
+  "nn": 52,
+  "category": "s3_cat01",
+  "substance": "glass",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Material use",
+   "l2": "Other",
+   "l3": "Glass",
+   "l4": "",
+   "col": "Primary material production",
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Converted from kg CO2e per tonne. Published value is 1402.76667 kg per tonne."
+ },
+ {
+  "nn": 53,
+  "category": "s3_cat01",
+  "substance": "aluminium_cans",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Material use",
+   "l2": "Metal",
+   "l3": "Metal: aluminium cans and foil (excl. forming)",
+   "l4": "",
+   "col": "Primary material production",
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Converted from kg CO2e per tonne. Published value is 9106.91851 kg per tonne."
+ },
+ {
+  "nn": 54,
+  "category": "s3_cat01",
+  "substance": "steel_cans",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Material use",
+   "l2": "Metal",
+   "l3": "Metal: steel cans",
+   "l4": "",
+   "col": "Primary material production",
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Converted from kg CO2e per tonne. Published value is 2854.91851 kg per tonne."
+ },
+ {
+  "nn": 55,
+  "category": "s3_cat01",
+  "substance": "concrete",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Material use",
+   "l2": "Construction",
+   "l3": "Concrete",
+   "l4": "",
+   "col": "Primary material production",
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Converted from kg CO2e per tonne. Published value is 118.75127 kg per tonne."
+ },
+ {
+  "nn": 56,
+  "category": "s3_cat01",
+  "substance": "wood",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Material use",
+   "l2": "Construction",
+   "l3": "Wood",
+   "l4": "",
+   "col": "Primary material production",
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Converted from kg CO2e per tonne. Published value is 269.50416 kg per tonne."
+ },
+ {
+  "nn": 57,
+  "category": "s3_cat01",
+  "substance": "bricks",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Material use",
+   "l2": "Construction",
+   "l3": "Bricks",
+   "l4": "",
+   "col": "Primary material production",
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Converted from kg CO2e per tonne. Published value is 241.75127 kg per tonne."
+ },
+ {
+  "nn": 58,
+  "category": "s3_cat01",
+  "substance": "aggregates",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Material use",
+   "l2": "Construction",
+   "l3": "Aggregates",
+   "l4": "",
+   "col": "Primary material production",
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Converted from kg CO2e per tonne. Published value is 7.75127 kg per tonne."
+ },
+ {
+  "nn": 59,
+  "category": "s3_cat01",
+  "substance": "plasterboard",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Material use",
+   "l2": "Construction",
+   "l3": "Plasterboard",
+   "l4": "",
+   "col": "Primary material production",
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Converted from kg CO2e per tonne. Published value is 120.05 kg per tonne."
+ },
+ {
+  "nn": 60,
+  "category": "s3_cat05",
+  "substance": "mixed_waste_combustion",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Waste disposal",
+   "l2": "Refuse",
+   "l3": "Commercial and industrial waste",
+   "l4": "",
+   "col": [
+    "Combustion",
+    "Incineration with Energy Recovery"
+   ],
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Combustion treatment; converted from kg CO2e per tonne. Published value is 6.41061 kg per tonne."
+ },
+ {
+  "nn": 61,
+  "category": "s3_cat05",
+  "substance": "household_waste_landfill",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Waste disposal",
+   "l2": "Refuse",
+   "l3": "Household residual waste",
+   "l4": "",
+   "col": "Landfill",
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Landfill; converted from kg CO2e per tonne. Published value is 497.04416 kg per tonne."
+ },
+ {
+  "nn": 62,
+  "category": "s3_cat05",
+  "substance": "household_waste_combustion",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Waste disposal",
+   "l2": "Refuse",
+   "l3": "Household residual waste",
+   "l4": "",
+   "col": [
+    "Combustion",
+    "Incineration with Energy Recovery"
+   ],
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Combustion; converted from kg CO2e per tonne. Published value is 6.41061 kg per tonne."
+ },
+ {
+  "nn": 63,
+  "category": "s3_cat05",
+  "substance": "food_waste_landfill",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Waste disposal",
+   "l2": "Refuse",
+   "l3": "Organic: food and drink waste",
+   "l4": "",
+   "col": "Landfill",
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Landfill; converted from kg CO2e per tonne. Published value is 700.20961 kg per tonne."
+ },
+ {
+  "nn": 64,
+  "category": "s3_cat05",
+  "substance": "food_waste_composting",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Waste disposal",
+   "l2": "Refuse",
+   "l3": "Organic: food and drink waste",
+   "l4": "",
+   "col": "Composting",
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Composting; converted from kg CO2e per tonne. Published value is 8.88386 kg per tonne."
+ },
+ {
+  "nn": 65,
+  "category": "s3_cat05",
+  "substance": "paper_waste_landfill",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Waste disposal",
+   "l2": "Paper",
+   "l3": "Paper and board: paper",
+   "l4": "",
+   "col": "Landfill",
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Landfill; converted from kg CO2e per tonne. Published value is 1164.39015 kg per tonne."
+ },
+ {
+  "nn": 66,
+  "category": "s3_cat05",
+  "substance": "paper_waste_recycling",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Waste disposal",
+   "l2": "Paper",
+   "l3": "Paper and board: paper",
+   "l4": "",
+   "col": "Closed-loop",
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Closed-loop recycling; converted from kg CO2e per tonne. Published value is 6.41061 kg per tonne."
+ },
+ {
+  "nn": 67,
+  "category": "s3_cat05",
+  "substance": "plastic_waste_recycling",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Waste disposal",
+   "l2": "Plastic",
+   "l3": "Plastics: average plastics",
+   "l4": "",
+   "col": "Open-loop",
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Closed-loop recycling; converted from kg CO2e per tonne. Published value is 6.41061 kg per tonne."
+ },
+ {
+  "nn": 68,
+  "category": "s3_cat05",
+  "substance": "metal_waste_recycling",
+  "unit": "kg CO2e/kg",
+  "gas": "CO2e",
+  "divisor": 1000.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Waste disposal",
+   "l2": "Metal",
+   "l3": "Metal: scrap metal",
+   "l4": "",
+   "col": "Open-loop",
+   "uom": "tonnes",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Closed-loop recycling; converted from kg CO2e per tonne. Published value is 6.41061 kg per tonne."
+ },
+ {
+  "nn": 69,
+  "category": "s3_cat04",
+  "substance": "hgv_100",
+  "unit": "kg CO2e/tkm",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Freighting goods",
+   "l2": "HGV (all diesel)",
+   "l3": "All HGVs",
+   "l4": "",
+   "col": "100% Laden",
+   "uom": "tonne.km",
+   "ghg": "kg CO2e"
+  },
+  "notes": "All HGVs diesel, 100 % laden band."
+ },
+ {
+  "nn": 70,
+  "category": "s3_cat04",
+  "substance": "rail_freight",
+  "unit": "kg CO2e/tkm",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Freighting goods",
+   "l2": "Rail",
+   "l3": "Freight train",
+   "l4": "",
+   "col": "",
+   "uom": "tonne.km",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Rail freight."
+ },
+ {
+  "nn": 71,
+  "category": "s3_cat04",
+  "substance": "sea_container",
+  "unit": "kg CO2e/tkm",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Freighting goods",
+   "l2": "Cargo ship",
+   "l3": "Container ship",
+   "l4": "Average",
+   "col": "",
+   "uom": "tonne.km",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Container ship, average size."
+ },
+ {
+  "nn": 72,
+  "category": "s3_cat04",
+  "substance": "sea_bulk",
+  "unit": "kg CO2e/tkm",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Freighting goods",
+   "l2": "Cargo ship",
+   "l3": "Bulk carrier",
+   "l4": "Average",
+   "col": "",
+   "uom": "tonne.km",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Bulk carrier, average size."
+ },
+ {
+  "nn": 73,
+  "category": "s3_cat04",
+  "substance": "sea_tanker",
+  "unit": "kg CO2e/tkm",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Freighting goods",
+   "l2": "Sea tanker",
+   "l3": "Crude tanker",
+   "l4": "Average",
+   "col": "",
+   "uom": "tonne.km",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Crude tanker, average size."
+ },
+ {
+  "nn": 74,
+  "category": "s3_cat06",
+  "substance": "air_domestic",
+  "unit": "kg CO2e/pkm",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Business travel- air",
+   "l2": "Flights",
+   "l3": "Domestic, to/from UK",
+   "l4": "Average passenger",
+   "col": "With RF",
+   "uom": "passenger.km",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Domestic flights, average passenger, including radiative forcing."
+ },
+ {
+  "nn": 75,
+  "category": "s3_cat06",
+  "substance": "air_domestic_no_rf",
+  "unit": "kg CO2e/pkm",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Business travel- air",
+   "l2": "Flights",
+   "l3": "Domestic, to/from UK",
+   "l4": "Average passenger",
+   "col": "Without RF",
+   "uom": "passenger.km",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Domestic flights, average passenger, without radiative forcing."
+ },
+ {
+  "nn": 76,
+  "category": "s3_cat06",
+  "substance": "air_short_haul_no_rf",
+  "unit": "kg CO2e/pkm",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Business travel- air",
+   "l2": "Flights",
+   "l3": "Short-haul, to/from UK",
+   "l4": "Average passenger",
+   "col": "Without RF",
+   "uom": "passenger.km",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Short-haul, average passenger, without radiative forcing."
+ },
+ {
+  "nn": 77,
+  "category": "s3_cat06",
+  "substance": "air_long_haul",
+  "unit": "kg CO2e/pkm",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Business travel- air",
+   "l2": "Flights",
+   "l3": "Long-haul, to/from UK",
+   "l4": "Average passenger",
+   "col": "With RF",
+   "uom": "passenger.km",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Long-haul, average passenger, including radiative forcing."
+ },
+ {
+  "nn": 78,
+  "category": "s3_cat06",
+  "substance": "air_long_haul_no_rf",
+  "unit": "kg CO2e/pkm",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Business travel- air",
+   "l2": "Flights",
+   "l3": "Long-haul, to/from UK",
+   "l4": "Average passenger",
+   "col": "Without RF",
+   "uom": "passenger.km",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Long-haul, average passenger, without radiative forcing."
+ },
+ {
+  "nn": 79,
+  "category": "s3_cat06",
+  "substance": "rail_national",
+  "unit": "kg CO2e/pkm",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Business travel- land",
+   "l2": "Rail",
+   "l3": "National rail",
+   "l4": "",
+   "col": "",
+   "uom": "passenger.km",
+   "ghg": "kg CO2e"
+  },
+  "notes": "National rail, per passenger.km."
+ },
+ {
+  "nn": 80,
+  "category": "s3_cat06",
+  "substance": "rail_international",
+  "unit": "kg CO2e/pkm",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Business travel- land",
+   "l2": "Rail",
+   "l3": "International rail",
+   "l4": "",
+   "col": "",
+   "uom": "passenger.km",
+   "ghg": "kg CO2e"
+  },
+  "notes": "International rail, per passenger.km."
+ },
+ {
+  "nn": 81,
+  "category": "s3_cat06",
+  "substance": "light_rail",
+  "unit": "kg CO2e/pkm",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Business travel- land",
+   "l2": "Rail",
+   "l3": "Light rail and tram",
+   "l4": "",
+   "col": "",
+   "uom": "passenger.km",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Light rail and tram, per passenger.km."
+ },
+ {
+  "nn": 82,
+  "category": "s3_cat06",
+  "substance": "bus",
+  "unit": "kg CO2e/pkm",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Business travel- land",
+   "l2": "Bus",
+   "l3": "Average local bus",
+   "l4": "",
+   "col": "",
+   "uom": "passenger.km",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Average local bus, per passenger.km."
+ },
+ {
+  "nn": 83,
+  "category": "s3_cat06",
+  "substance": "coach",
+  "unit": "kg CO2e/pkm",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Business travel- land",
+   "l2": "Bus",
+   "l3": "Coach",
+   "l4": "",
+   "col": "",
+   "uom": "passenger.km",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Coach, per passenger.km."
+ },
+ {
+  "nn": 84,
+  "category": "s3_cat04",
+  "substance": "air_freight_domestic",
+  "unit": "kg CO2e/tkm",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Freighting goods",
+   "l2": "Freight flights",
+   "l3": "Domestic, to/from UK",
+   "l4": "",
+   "col": "With RF",
+   "uom": "tonne.km",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Domestic air freight including the non-CO2 radiative forcing uplift. DEFRA includes an 8% distance uplift in these factors."
+ },
+ {
+  "nn": 85,
+  "category": "s3_cat04",
+  "substance": "air_freight_domestic_no_rf",
+  "unit": "kg CO2e/tkm",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Freighting goods",
+   "l2": "Freight flights",
+   "l3": "Domestic, to/from UK",
+   "l4": "",
+   "col": "Without RF",
+   "uom": "tonne.km",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Domestic air freight, direct CO2, CH4 and N2O effects only. DEFRA includes an 8% distance uplift in these factors."
+ },
+ {
+  "nn": 86,
+  "category": "s3_cat04",
+  "substance": "air_freight_short_haul",
+  "unit": "kg CO2e/tkm",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Freighting goods",
+   "l2": "Freight flights",
+   "l3": "Short-haul, to/from UK",
+   "l4": "",
+   "col": "With RF",
+   "uom": "tonne.km",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Short-haul air freight including the non-CO2 radiative forcing uplift. DEFRA includes an 8% distance uplift in these factors."
+ },
+ {
+  "nn": 87,
+  "category": "s3_cat04",
+  "substance": "air_freight_short_haul_no_rf",
+  "unit": "kg CO2e/tkm",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Freighting goods",
+   "l2": "Freight flights",
+   "l3": "Short-haul, to/from UK",
+   "l4": "",
+   "col": "Without RF",
+   "uom": "tonne.km",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Short-haul air freight, direct effects only. DEFRA includes an 8% distance uplift in these factors."
+ },
+ {
+  "nn": 88,
+  "category": "s3_cat04",
+  "substance": "air_freight_long_haul",
+  "unit": "kg CO2e/tkm",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Freighting goods",
+   "l2": "Freight flights",
+   "l3": "Long-haul, to/from UK",
+   "l4": "",
+   "col": "With RF",
+   "uom": "tonne.km",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Long-haul air freight including the non-CO2 radiative forcing uplift. DEFRA includes an 8% distance uplift in these factors."
+ },
+ {
+  "nn": 89,
+  "category": "s3_cat04",
+  "substance": "air_freight_long_haul_no_rf",
+  "unit": "kg CO2e/tkm",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Freighting goods",
+   "l2": "Freight flights",
+   "l3": "Long-haul, to/from UK",
+   "l4": "",
+   "col": "Without RF",
+   "uom": "tonne.km",
+   "ghg": "kg CO2e"
+  },
+  "notes": "Long-haul air freight, direct effects only. DEFRA includes an 8% distance uplift in these factors."
+ },
+ {
+  "nn": 90,
+  "category": "s3_cat04",
+  "substance": "air_freight_international",
+  "unit": "kg CO2e/tkm",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Freighting goods",
+   "l2": "Freight flights",
+   "l3": "International, to/from non-UK",
+   "l4": "",
+   "col": "With RF",
+   "uom": "tonne.km",
+   "ghg": "kg CO2e"
+  },
+  "notes": "International air freight between non-UK airports, including radiative forcing. DEFRA includes an 8% distance uplift in these factors."
+ },
+ {
+  "nn": 91,
+  "category": "s3_cat04",
+  "substance": "air_freight_international_no_rf",
+  "unit": "kg CO2e/tkm",
+  "gas": "CO2e",
+  "divisor": 1.0,
+  "geography": "GB",
+  "selector": {
+   "l1": "Freighting goods",
+   "l2": "Freight flights",
+   "l3": "International, to/from non-UK",
+   "l4": "",
+   "col": "Without RF",
+   "uom": "tonne.km",
+   "ghg": "kg CO2e"
+  },
+  "notes": "International air freight between non-UK airports, direct effects only. DEFRA includes an 8% distance uplift in these factors."
+ }
+]

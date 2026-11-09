@@ -36,7 +36,7 @@ from reportlab.lib.units import inch
 from reportlab.lib.colors import HexColor, white
 
 from ..accounting.aggregate import OrganizationReport
-from ..core.calc import EmissionResult
+from ..core.calc import EmissionResult, gwp_basis_note
 from ..core.exceptions import PDFExportError
 
 # -- style definitions ---------------------------------------------------- #
@@ -264,6 +264,10 @@ class PDFReport:
             "appropriate emission factors."
         )
         elements.append(Paragraph(limitations_text, _BODY_STYLE))
+        basis_note = gwp_basis_note(self.emission_results)
+        if basis_note:
+            elements.append(Spacer(1, 0.1 * inch))
+            elements.append(Paragraph(basis_note, _BODY_STYLE))
 
         # ---- Build PDF ----
         doc.build(elements)

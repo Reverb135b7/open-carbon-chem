@@ -185,13 +185,47 @@ def test_activity_reporting_year_feeds_lookup(registry):
 @pytest.mark.integration
 def test_published_seed_is_the_default():
     registry = FactorRegistry.from_csv()
-    assert len(registry) == 88
+    assert len(registry) == 187
+    assert {factor.reporting_year for factor in registry} == {2006, 2024, 2025}
     for factor in registry:
         assert factor.review_status == "published"
         assert factor.source_org in {"DESNZ", "IPCC"}
         assert factor.source_reference
         assert factor.version
         assert factor.notes
+
+
+@pytest.mark.integration
+def test_2025_vintage_supersedes_2024_for_2025_activity():
+    registry = FactorRegistry.from_csv()
+    find_2024 = registry.find(
+        activity_category="purchased_electricity", substance="grid_electricity",
+        geography="GB", year=2024, gas="CO2e",
+    )
+    find_2025 = registry.find(
+        activity_category="purchased_electricity", substance="grid_electricity",
+        geography="GB", year=2025, gas="CO2e",
+    )
+    assert find_2024.reporting_year == 2024
+    assert find_2025.reporting_year == 2025
+    assert find_2024.value == pytest.approx(0.20705)
+    assert find_2025.value == pytest.approx(0.177)
+
+
+@pytest.mark.integration
+def test_air_freight_has_direct_and_radiative_forcing_variants():
+    registry = FactorRegistry.from_csv()
+    with_rf = registry.find(
+        activity_category="s3_cat04", substance="air_freight_long_haul",
+        geography="GB", year=2024, gas="CO2e",
+    )
+    without_rf = registry.find(
+        activity_category="s3_cat04", substance="air_freight_long_haul_no_rf",
+        geography="GB", year=2024, gas="CO2e",
+    )
+    assert with_rf.value == pytest.approx(1.09904)
+    assert without_rf.value == pytest.approx(0.64875)
+    assert without_rf.value < with_rf.value
 
 
 @pytest.mark.integration
@@ -280,3 +314,73 @@ def test_published_seed_uses_uk_geography_and_ipcc_fallback():
     )
     assert limestone.geography == "GLOBAL"
     assert limestone.value == pytest.approx(0.43971)
+
+
+@pytest.mark.integration
+def test_factor_spec_covers_every_published_desnz_row():
+    """The committed spec must describe exactly the packaged DESNZ rows."""
+    import json
+    from pathlib import Path
+
+    spec = json.loads(Path("tools/factor_spec.json").read_text(encoding="utf-8"))
+    assert len(spec) == 91
+    assert len({entry["nn"] for entry in spec}) == 91
+    for entry in spec:
+        assert set(entry["selector"]) == {"l1", "l2", "l3", "l4", "col", "uom", "ghg"}
+        assert entry["selector"]["l1"]
+        assert entry["divisor"] > 0
+
+    registry = FactorRegistry.from_csv()
+    published = {(f.substance, f.unit, f.gas) for f in registry
+                 if f.source_org == "DESNZ" and f.reporting_year == 2024}
+    assert published == {(e["substance"], e["unit"], e["gas"]) for e in spec}
+
+
+@pytest.mark.integration
+def test_published_csv_has_no_shifted_rows():
+    """Every row must carry exactly the documented columns.
+
+    An unquoted comma in a note silently shifts the trailing fields when the
+    file is read with csv.DictReader, so guard the on-disk shape as well.
+    """
+    import csv
+
+    with open(default_seed_path(), encoding="utf-8", newline="") as handle:
+        rows = list(csv.reader(handle))
+    header, body = rows[0], rows[1:]
+    assert len(header) == 16
+    assert all(len(row) == len(header) for row in body)
+
+
+@pytest.mark.integration
+def test_gwp_basis_note_flags_mixed_reports():
+    from opencarbonchem.core.calc import compute_emissions, gwp_basis_note
+
+    registry = FactorRegistry.from_csv()
+    co2e_activity = ActivityRecord(
+        activity_id="GWP-1", scope=1, category="fugitive_emissions",
+        substance="r410a", quantity=1, unit="kg", gas="CO2e",
+    )
+    co2e_factor = registry.find(
+        activity_category="fugitive_emissions", substance="r410a",
+        geography="GB", year=2024, gas="CO2e",
+    )
+    published_result = compute_emissions(co2e_activity, co2e_factor)
+    assert gwp_basis_note([published_result]) is None
+
+    ch4_factor = EmissionFactor(
+        factor_id="EF-TEST-CH4", activity_category="fugitive_emissions",
+        substance="methane", value=0.001, unit="kg CH4/kg", gas="CH4",
+        gases_covered=["CH4"], geography="GB", reporting_year=2024,
+        source_org="SYNTHETIC", source_reference="unit test", version="test",
+        review_status="illustrative", methane_basis="fossil",
+    )
+    ch4_activity = ActivityRecord(
+        activity_id="GWP-2", scope=1, category="fugitive_emissions",
+        substance="methane", quantity=1, unit="kg", gas="CH4",
+    )
+    converted_result = compute_emissions(ch4_activity, ch4_factor)
+    note = gwp_basis_note([published_result, converted_result])
+    assert note is not None
+    assert "Mixed GWP basis" in note
+    assert "AR5" in note
