@@ -10,19 +10,20 @@ nothing here is an estimate made by OpenCarbonChem.
 The packaged set carries two DESNZ vintages plus IPCC process factors. The registry
 returns the newest factor at or before an activity's reporting year, so 2024 activity
 resolves the 2024 rows and 2025 activity resolves the 2025 rows; it never reaches
-forward to a later year. 2026 was published in June 2026 but is not transcribed yet.
+forward to a later year.
 
 | Vintage | Source workbook | SHA-256 |
 |---|---|---|
 | 2024 (full set v1.1) | [flat format](https://assets.publishing.service.gov.uk/media/6722567c10b0d582ee8c4953/ghg-conversion-factors-2024-FlatFormat_v1_1.xlsx) | `1b063892ad1f00c5bc73029c016e54bc4c3050a71219202b545f8aea2f9f75c4` |
 | 2025 (full set v1.0) | [flat format](https://assets.publishing.service.gov.uk/media/6846b6ea57f3515d9611f0dd/ghg-conversion-factors-2025-flat-format.xlsx) | `8bfdb45b81ec4a88e3bdf4584637330f62e6bd09ce1940e654c5d7b7f736de94` |
+| 2026 (flat file v1.2, revised 10 July 2026) | [flat format](https://assets.publishing.service.gov.uk/media/6a6c9748862aaf18d9c62ac9/ghg-conversion-factors-2026-flat-format-revised.xlsx) | `a9a455ab396dae226d510c7be6233748416d490c41a5d20f3dc7a0c45feecd5e` |
 
 The flat-format workbooks are used because their long-format table gives one row per
 factor with the category path, unit and gas basis in separate columns; they are the
 publisher's machine-readable release, not a re-keying of the PDF.
 
 Values move between vintages, so the year matters: UK grid electricity is
-0.20705 kg CO2e/kWh in 2024 and 0.17700 in 2025. The demo dataset is 2024 data and
+0.20705 kg CO2e/kWh in 2024, 0.17700 in 2025 and 0.13096 in 2026. The demo dataset is 2024 data and
 therefore resolves the 2024 rows.
 
 ## Core factors used by the demo
@@ -50,7 +51,7 @@ IPCC reference: <https://www.ipcc-nggip.iges.or.jp/public/2006gl/pdf/3_Volume3/V
 
 ## Coverage
 
-The packaged set contains **187 factors** (91 DESNZ per vintage for 2024 and 2025, plus five IPCC process factors). Substances are lowercase snake_case keys; waste and freight entries name their treatment or load band so a factor cannot be applied to the wrong activity.
+The packaged set contains **278 factors** (91 DESNZ per vintage for 2024, 2025 and 2026, plus five IPCC process factors). Substances are lowercase snake_case keys; waste and freight entries name their treatment or load band so a factor cannot be applied to the wrong activity.
 
 | Category | Substances (with packaged factors) |
 |---|---|
