@@ -141,3 +141,62 @@ def test_pdf_save_writes_a_file(inventory, tmp_path):
 def test_export_errors_are_typed():
     # The reporting layer raises ExportError subclasses, never bare exceptions.
     assert issubclass(PDFExportError, ExportError)
+
+
+def test_excel_detail_sheet_reports_inputs_not_just_outputs(inventory):
+    """The audit sheet must carry the activity value and the factor applied."""
+    report, rows = inventory
+    excel = build_excel_report(report, rows, run_id="RUN-COLS")
+    workbook = load_workbook(io.BytesIO(excel.save_to_bytes()))
+    sheet = workbook["Scope1_Detail"]
+    headers = [cell.value for cell in sheet[2]]
+    assert headers[:6] == [
+        "Activity ID", "Category", "Substance", "Quantity", "Unit", "Gas",
+    ]
+    assert "Factor value" in headers and "Factor unit" in headers
+    assert "GWP" in headers and "GWP set" in headers
+
+    quantity_col = headers.index("Quantity") + 1
+    gas_col = headers.index("Gas") + 1
+    co2e_col = headers.index("CO2e (kg)") + 1
+    assert sheet.cell(row=3, column=quantity_col).value == pytest.approx(1000.0)
+    assert sheet.cell(row=3, column=gas_col).value == "CO2"
+    # 1000 kWh x 0.18 kg CO2/kWh
+    assert sheet.cell(row=3, column=co2e_col).value == pytest.approx(180.0)
+
+
+def test_pdf_labels_scopes_by_number_when_one_is_missing(registry):
+    """A report without Scope 1 must not relabel Scope 2 as Scope 1."""
+    s2 = calculate_scope2(
+        [act("A-ELEC", "purchased_electricity", "grid_electricity", 1000, "kWh",
+             gas="CO2e", scope=2)],
+        registry,
+    ).location
+    s3 = calculate_scope3([act("A-PAPER", "s3_cat01", "paper", 1000, "kg", scope=3)], registry)
+    report = OrganizationReport.from_results([s2, s3])
+    rows = [row for result in (s2, s3) for row in result.results]
+
+    pdf = build_pdf_report(report, rows)
+    # Scope rows are keyed by scope number, so Scope 2 keeps its own 450 kg.
+    assert pdf.scope_rows() == [
+        ["Scope", "CO2e (kg)", "CO2e (t)"],
+        ["Scope 1", "not reported", "-"],
+        ["Scope 2", "450.0", "0.450"],
+        ["Scope 3", "1,200.0", "1.200"],
+        ["Total", "1,650.0", "1.650"],
+    ]
+    assert b"not reported" in _pdf_text(pdf.save_to_bytes())
+
+
+def test_pdf_refuses_rows_that_do_not_reconcile(inventory):
+    report, rows = inventory
+    with pytest.raises(PDFExportError, match="does not match report total"):
+        build_pdf_report(report, rows[:-1])
+
+
+def test_pdf_includes_the_boundary_document_when_supplied(inventory):
+    report, rows = inventory
+    text = _pdf_text(
+        build_pdf_report(report, rows, boundary_document="BOUNDARY-2024-v3").save_to_bytes()
+    )
+    assert b"BOUNDARY-2024-v3" in text

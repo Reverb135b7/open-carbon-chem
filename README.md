@@ -9,7 +9,7 @@ engine is independent of any user interface and every reported number carries
 the activity record, emission factor and GWP set that produced it.
 
 > **Status:** early development (v0.2.0). Milestones 1–6 are complete and
-> tested (200 tests); Scope 1/2/3 corporate accounting and Product Carbon
+> tested (219 tests); Scope 1/2/3 corporate accounting and Product Carbon
 > Footprints are implemented (see
 > [`docs/architecture.md`](docs/architecture.md) for the roadmap). Not yet
 > certified, verified or conformant with any standard — it implements

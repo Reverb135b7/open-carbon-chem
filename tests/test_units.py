@@ -104,3 +104,43 @@ def test_non_usd_currency_needs_explicit_rate():
 def test_zero_and_negative_rates_rejected():
     with pytest.raises(CurrencyError):
         default_registry().configure_exchange_rates({"XYZ": 0})
+
+
+@pytest.mark.unit
+def test_tonne_kilometre_matches_its_base_definition():
+    # 1 tkm = 1 tonne x 1 km = 1e6 kg*m, and 't*km' must be the same physical unit.
+    assert q(1, "tkm").base_value == pytest.approx(1e6)
+    assert q(1, "tkm").to("t*km").value == pytest.approx(1.0)
+    assert q(1, "t*km").to("tkm").value == pytest.approx(1.0)
+
+
+@pytest.mark.unit
+def test_scaling_a_quantity_keeps_its_displayed_unit():
+    # Regression: this used to multiply the coherent base value, so q(2, "km") * 3
+    # became 6000 km (and 6000 km / 2 became 500 km).
+    scaled = q(2, "km") * 3
+    assert scaled.value == pytest.approx(6.0)
+    assert scaled.to("m").value == pytest.approx(6000.0)
+
+    halved = q(2, "km") / 2
+    assert halved.value == pytest.approx(1.0)
+    assert halved.base_value == pytest.approx(1000.0)
+
+
+@pytest.mark.unit
+def test_multiplication_and_division_keep_value_unit_consistent():
+    # km * km must be 2 km^2 (= 2e6 m^2), not 2e12 m^2.
+    area = q(2, "km") * q(1, "km")
+    assert area.base_value == pytest.approx(2e6)
+    assert area.value == pytest.approx(2.0)
+
+    speed = q(100, "km") / q(2, "h")
+    assert speed.base_value == pytest.approx(100_000 / 7200)
+    assert speed.value == pytest.approx(50.0)
+
+
+@pytest.mark.unit
+def test_registry_known_lists_aliases_as_well_as_symbols():
+    names = default_registry().known()
+    assert "kg" in names
+    assert "kilogram" in names

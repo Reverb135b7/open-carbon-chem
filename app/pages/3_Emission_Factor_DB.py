@@ -19,13 +19,13 @@ from pathlib import Path
 from opencarbonchem.factors import FactorRegistry
 from opencarbonchem.factors.models import EmissionFactor
 from opencarbonchem.database import CarbonDatabase
-from opencarbonchem.core.exceptions import MissingFactorError
 
-DATA = Path(__file__).parent.parent / "data" / "raw" / "synthetic"
-DEFAULT_CSV = Path(__file__).parent.parent / "src" / "opencarbonchem" / "factors" / "data" / "illustrative_factors.csv"
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_CSV = REPO_ROOT / "src" / "opencarbonchem" / "factors" / "data" / "illustrative_factors.csv"
+DB_PATH = REPO_ROOT / "data" / "opencarbonchem.db"
 
 
-st.set_page_config(page_title="OpenCarbonChem — Emission Factor DB", page_icon📈", layout="wide")
+st.set_page_config(page_title="OpenCarbonChem — Emission Factor DB", page_icon="📈", layout="wide")
 st.title("📈 Emission Factor Database")
 
 
@@ -97,13 +97,16 @@ with col_right:
         fid = st.text_input("Factor ID", help="Must be unique across the registry")
         activity_category = st.text_input("Activity category", help="e.g. stationary_combustion")
         substance = st.text_input("Substance", help="e.g. natural_gas")
-        value = st.number_input("Value", min_value=0.0, step=0.1, format="%.4f")
+        value = st.number_input("Value", min_value=0.0001, step=0.1, format="%.4f")
         unit = st.text_input("Unit", help="e.g. kg CO2/kWh")
         gas = st.text_input("Gas", help="e.g. CO2; or CO2e if already combined")
         geography = st.text_input("Geography", value="GLOBAL")
         reporting_year = st.number_input("Reporting year", min_value=1900, value=2024, step=1)
         source_org = st.text_input("Source organisation", help="e.g. IPCC, DEFRA, SYNTHETIC")
-        source_reference = st.text_input("Source reference (URL/DOI)", help="e.g. https://...")
+        source_reference = st.text_input(
+            "Source reference (URL/DOI)",
+            help="Required by the factor model; synthetic entries should say so explicitly",
+        )
         version = st.text_input("Version", help="e.g. 2024, v1.2")
         uncertainty_pct = st.number_input("Uncertainty (% , optional)", min_value=0.0, max_value=100.0,
                                           value=0.0, step=1.0, format="%.1f")
@@ -115,6 +118,8 @@ with col_right:
         if submitted:
             if not fid or not activity_category or not substance:
                 st.error("Factor ID, activity category and substance are required.")
+            elif not source_reference.strip():
+                st.error("A source reference is required: an unattributed factor is not auditable.")
             else:
                 try:
                     new_factor = EmissionFactor(
@@ -135,10 +140,11 @@ with col_right:
                         methane_basis=None,
                         notes=notes or "",
                     )
-                    with CarbonDatabase(":memory:") as db:
-                        db.init_schema()
+                    db = CarbonDatabase(DB_PATH)
+                    db.init_schema()
+                    with db:
                         db.save_factor(new_factor)
-                    st.success(f"Factor {fid} saved to the in‑memory database.")
+                    st.success(f"Factor {fid} stored in {DB_PATH.name}.")
                 except Exception as e:
                     st.error(f"Failed to save factor: {e}")
 

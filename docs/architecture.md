@@ -183,7 +183,7 @@ DDL: `src/opencarbonchem/database/schema.sql` (idempotent `IF NOT EXISTS`).
   `review_status=illustrative`, `source_org=SYNTHETIC`, for software testing
   only — not to be presented as official factors.
 
-### 4.6 `accounting/` (scope 1/2/3 implemented; reconciliation pending)
+### 4.6 `accounting/` (implemented)
 - `scope1.py`: subcategories stationary/mobile/fugitive/process; validates scope
   and category (`BoundaryError`), aggregates by category and gas.
 - `scope2.py`: purchased electricity/steam/heat/cooling; location-based always,
@@ -191,19 +191,36 @@ DDL: `src/opencarbonchem/database/schema.sql` (idempotent `IF NOT EXISTS`).
   (never falls back silently to grid average).
 - `scope3.py`: full 15-category catalogue (number, name, direction,
   applicability, typical data) + generic calculation keyed `s3_cat01..s3_cat15`.
+- `boundary.py`: documented boundary with operational-control, financial-control
+  and equity-share consolidation; a missing entity is an error, not a zero.
+- `aggregate.py`: `OrganizationReport` with total/by-scope/by-category/by-gas,
+  `reconcile()` consistency checks plus advisory coverage gaps, and
+  `calculate_inventory()` for "every scope that has rows".
+- `comparison.py`: year-over-year comparison that flags new/missing lines instead
+  of inventing a −100 % or a zero baseline.
 - `ScopeResult`: row-level results plus `total_kg`, `total_t`, `by_category`,
-  `by_gas`.
+  `by_gas`; rows are rejected if their scope does not match the result's scope.
 
-### 4.7 Pending modules (specified, not yet implemented)
-- `pcf/`: product definition, functional unit, boundary, inventory assembly,
-  allocation (mass/economic/physical), cradle-to-gate & cradle-to-grave.
-- `analytics/`: hotspots, one-at-a-time sensitivity, Monte Carlo (seeded,
-  distributions, percentiles, contribution analysis).
-- `scenarios/`: lever implementations (renewables, efficiency, fuel switching,
-  substitution, waste, process, transport), baseline/scenario diff.
-- `reporting/`: ReportLab PDF, openpyxl Excel, reconciliation check.
-- `app/`: 11-page Streamlit dashboard.
-- `database/store.py`: typed CRUD (schema already defined).
+### 4.7 `pcf/`, `analytics/`, `scenarios/`, `reporting/`, `app/` (implemented)
+- `pcf/`: product definition, stage catalogue, boundary enforcement,
+  mass/economic/physical-causality/none allocation, duplicate-activity guard,
+  `excluded_from_corporate` cross-check against a corporate report, persistence
+  (including the allocated total).
+- `analytics/`: hotspot rankings, one-at-a-time tornado sensitivity, seeded
+  Monte Carlo with percentiles and variance-share contributions.
+- `scenarios/`: seven levers as pure `entries -> entries` transforms, baseline
+  and per-lever totals recomputed through the engine, persistence of scenario
+  headers and results.
+- `reporting/`: openpyxl workbook (summary, per-scope audit rows, reconciliation
+  sheet) and ReportLab PDF (scope table, methodology, limitations); both refuse
+  to write when the rows do not reconcile with the report total.
+- `app/`: 11-page Streamlit dashboard, each page a thin client over these APIs.
+- `cli.py`: `opencarbonchem calculate --activities … --out …` with exit codes.
+
+### 4.8 `database/store.py` (implemented)
+Typed CRUD over SQLite for activities, factors, results, boundaries, PCF
+definitions/inventory/allocation rules and scenarios. Migrations add missing
+columns and relax `allocation_rules.stage` so a default rule can be stored.
 
 ---
 
@@ -264,10 +281,10 @@ Rules:
 | 6 | Product Carbon Footprint | **Done** (stage catalogue + boundary rules, `ProductDefinition`, `InventoryItem`, mass/economic/physical-causality/none allocation, PCF = Σ attributable CO2e / reference flow, double-counting guard vs corporate report, SQLite persistence, 28 tests) |
 | 7 | Hotspot, sensitivity and uncertainty analysis | **Done** (hotspot rankings by substance/category/scope/gas; one-at-a-time tornado sensitivity; Monte Carlo with seeded reproducibility, percentile ordering p5 ≤ median ≤ p95; variance-share contributions; >25 tests) |
 | 8 | Decarbonisation scenario modelling | **Done** (7 levers as pure `entries -> entries` transforms; `apply_lever` / `run_levers` recompute both totals through the engine; `compare_scenarios` returns baseline/scenario/reduction; `reduction_pct = None` for a zero baseline; `ScenarioError` when a lever is invalid or matches no rows; persistence via `save_scenario` / `save_scenario_results`; 36 tests) |
-| 9 | Streamlit interface | **Done** (11 pages, Overview → Report Generation, thin clients over the package API; all pages execute cleanly under `streamlit.testing` AppTest) |
+| 9 | Streamlit interface | **Done** (11 pages, Overview → Report Generation, thin clients over the package API; every page and every action button exercised through `streamlit.testing` AppTest, with the resulting totals checked against the package API) |
 | 10 | Reporting (PDF/Excel), documentation, full test suite | **Done** (Excel workbook with reconciliation guard, PDF executive summary, CLI entry point,
     LICENSE/CONTRIBUTING.md, methodology/assumptions/data-dictionary/provenance-policy/validation
-    protocol docs; 125 tests passing) |
+    protocol docs; 219 tests passing) |
 | 11 | Final integration and GitHub publication | **Done locally** (CI workflow, LICENSE, CONTRIBUTING, methodology/assumptions/data-dictionary/provenance/validation docs, notebooks/, reports/). Publishing to GitHub awaits the repository owner's authorisation. |
 
 At the end of every milestone: run the test suite, check calculation

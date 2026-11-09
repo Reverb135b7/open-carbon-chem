@@ -188,6 +188,16 @@ def calculate_pcf(
     allowed = set(product.included_stages)
     lines: list[PCFLineItem] = []
 
+    seen: dict[str, str] = {}
+    for item in inventory:
+        if item.activity_id in seen:
+            raise PCFError(
+                f"{product.pcf_id}: activity {item.activity_id!r} appears in both "
+                f"{seen[item.activity_id]!r} and {item.stage!r}. One activity row "
+                "contributes once; a duplicate would be counted twice."
+            )
+        seen[item.activity_id] = item.stage
+
     for item in inventory:
         if item.stage not in allowed:
             raise PCFError(

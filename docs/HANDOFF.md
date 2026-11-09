@@ -1,9 +1,9 @@
 # OpenCarbonChem — Handoff (current state)
 
 **Audience:** the next AI agent or developer picking this up cold.
-**Last updated:** after the scenario/CLI/reporting repair pass. All eleven milestones of
-`OpenCarbonChem Guide from Chatgpt.txt` are now implemented in the working tree;
-**200 tests pass** (`python -m pytest`).
+**Last updated:** after the pre-publication audit. All eleven milestones of
+`OpenCarbonChem Guide from Chatgpt.txt` are implemented in the working tree;
+**219 tests pass** (`python -m pytest`).
 
 Read in this order:
 
@@ -33,15 +33,17 @@ Read in this order:
 
 - 1000 kWh natural gas → **180 kg**; 1000 kWh grid electricity → **450 kg**; 1000 kg paper → **1200 kg**.
 - Three-scope roll-up → **1830 kg** (`OrganizationReport.total_kg`).
-- Full demo dataset (`data/activities_synthetic.csv`): Scope 1 **4,543,607.5 kg**, Scope 2 **910,000 kg**,
-  Scope 3 **82,000 kg**, total **5,535.6075 t** — reproduced by the CLI.
+- Full demo dataset (`data/activities_synthetic.csv`): Scope 1 **4,555,075 kg**, Scope 2 **910,000 kg**,
+  Scope 3 **82,000 kg**, total **5,547.075 t** — reproduced by the CLI. The R-134a row is a 1.5 % leak rate
+  (kg refrigerant per kg charge) converted with AR6 GWP 1530: 500 kg charge -> 7.5 kg R-134a ->
+  **11,475 kg CO2e**. A pre-combined CO2e value would hide that conversion.
 - Scenario baseline (gas 500 kWh + electricity 1000 kWh + paper 1000 kg + freight 2000 tkm +
   waste 1000 kg + limestone 1000 kg) → **2880 kg**; every lever's reduction is hand-checked in
   `tests/test_scenarios.py`.
 
 ---
 
-## 2. What this pass fixed (context for odd-looking code)
+## 2. What earlier passes fixed (context for odd-looking code)
 
 These modules existed in commits but **had never been importable or tested**:
 
@@ -58,7 +60,41 @@ These modules existed in commits but **had never been importable or tested**:
    and passed `leftIndent` to `Paragraph` instead of a `ParagraphStyle`. All fixed;
    `ExcelExportError` / `PDFExportError` now subclass `ExportError`.
 4. **New tests** for the repaired code: `tests/test_scenarios.py` (36), `tests/test_reporting.py` (7),
-   `tests/test_cli.py` (8). Suite: 149 → **200**.
+   `tests/test_cli.py` (8). Suite: 149 → 200 at that point, 219 after the audit below.
+
+### 2.1 Pre-publication audit (this pass)
+
+A full read of every module plus a click-through of every dashboard button found and fixed:
+
+- `Quantity` arithmetic multiplied the *coherent base* value but kept the original unit, so
+  `q(2, "km") * 3` was 6000 km; multiplication/division likewise double-scaled. Fixed and
+  covered by regression tests.
+- `tkm` was registered as 1000 kg·m; a tonne-kilometre is 1e6 kg·m. The error cancelled inside
+  a single calculation (quantity and factor both used tkm) but broke every conversion between
+  `tkm` and `t*km`.
+- `compute_emissions_batch` paired every activity with every factor (cross product), dropped
+  the error column it promised, and silently defaulted a missing scope to 1. It now pairs by
+  position, requires equal lengths, and records or raises typed errors.
+- `compute_emissions` now rejects an activity whose declared gas differs from the factor's gas
+  (a CO2 factor can no longer stand in for a CH4 row).
+- An unused `_compute_analytical_uncertainty` helper invented 10 %/30 % activity spreads and
+  presented them as calculated uncertainty; deleted rather than shipped.
+- The Excel "Quantity" column held the emission result and the factor value/GWP were absent;
+  the audit sheet now carries the activity value, factor value/unit, GWP and GWP set.
+- The PDF labelled scopes by list position, so a report without Scope 1 called Scope 2
+  "Scope 1"; it now keys by scope number, says "not reported", uses the boundary document, stays
+  inside WinAnsi, and refuses mismatched rows.
+- `allocation_rules.stage` was `NOT NULL`, so a default (stage-less) rule raised an
+  IntegrityError; the schema and a table-rebuild migration fix it. PCF rows now persist the
+  allocation share and allocated kg, and `pcf_allocated_total_kg` matches `PCFResult.total_kg`.
+- `ScopeResult` now refuses rows from another scope; `calculate_pcf` refuses a duplicate activity.
+- Dashboard: page 2 could not import (`from src.opencarbonchem…` inside the connectors, now
+  relative imports with lazy `requests`), every "save" wrote to a throwaway `:memory:` database,
+  pages 4–6 called undefined loaders, page 5 used non-existent `Scope2Result` attributes, page 7
+  passed a `factor__` keyword and a placeholder category, page 8 hit a genuine factor ambiguity
+  (missing geography), page 9 built duplicate Monte Carlo names and passed an object where an id
+  was required, and page 11 only pretended to generate reports. All are now real, verified
+  calls; page 11 writes and offers the actual `.xlsx`/`.pdf`.
 
 The dashboard page `app/pages/10_Decarbonisation_Scenarios.py` was rewritten (it used an undefined
 `c4`, a concatenated CSV path, `to_factor=None`, and passed a CSV path as the GWP set). All eleven
@@ -80,7 +116,7 @@ src/opencarbonchem/
 ├── database/    schema.sql store.py
 └── cli.py
 app/             1_Overview.py + pages/1–11
-tests/           13 modules, 200 tests
+tests/           14 modules, 219 tests
 docs/            architecture.md HANDOFF.md + connector/real-data notes
 (root)           methodology_documentation.md assumptions_documentation.md data_dictionary.md
                  emission_factor_provenance_policy.md validation_protocol.md STATUS.md
@@ -146,11 +182,13 @@ period, double-counting, PCF, allocation, scenario, uncertainty, analytics, reco
    by design. Any real dataset must carry full provenance (guide §6) and must not be labelled official.
 3. **Scenario result granularity.** `scenario_results.category` is currently written as `""` — one row
    per scenario totals. A per-category breakdown would need the lever output grouped by category.
-4. **`levers._ZeroFactor`** is raised in `Lever._scale` when a transformed factor would be ≤ 0 but is
-   never caught (currently unreachable because the quantity path is the only caller and multipliers
-   stay > 0). Either wire it up or delete it.
-5. **Dashboard tests are smoke-level only.** `AppTest` confirms each page runs; it does not assert
-   chart content. Calculation logic is unit-tested in the package instead (by design, N3).
+4. **Connectors (DEFRA / EPA / Ecoinvent) are stubs.** They make no live fetch, hold no
+   licensed data, and return an empty set when no packaged file exists. Page 2 labels them as
+   stubs. A real integration needs licensing, provenance mapping and a cache snapshot.
+5. **Dashboard verification is behavioural, not visual.** Every page and action button is
+   exercised through `AppTest` and the resulting metrics/tables/files are checked, but chart
+   rendering and layout are not asserted. Calculation logic is unit-tested in the package
+   (by design, N3).
 6. **Coverage gaps are advisory.** `OrganizationReport.reconcile().coverage_gaps` flags unreported
    scopes/categories for human review — it is not an error and never blocks a report.
 
@@ -194,7 +232,7 @@ period, double-counting, PCF, allocation, scenario, uncertainty, analytics, reco
 
 ## 8. Suggested next actions
 
-1. `python -m pytest` → expect **200 passed**.
+1. `python -m pytest` → expect **219 passed**.
 2. `python -m compileall -q src app` → clean.
 3. `PYTHONPATH=src python -m opencarbonchem.cli calculate --activities data/activities_synthetic.csv
    --run-id demo --out /tmp/demo` → totals above plus an `.xlsx` and `.pdf`.

@@ -130,13 +130,16 @@ CREATE TABLE IF NOT EXISTS pcf_inventory (
     activity_id  TEXT REFERENCES activity_data(id),
     factor_id    TEXT REFERENCES emission_factors(factor_id),
     co2e_kg      REAL NOT NULL,
+    allocation_share REAL,
+    allocated_kg REAL,
     excluded_from_corporate INTEGER NOT NULL DEFAULT 0 CHECK (excluded_from_corporate IN (0, 1))
 );
 
 CREATE TABLE IF NOT EXISTS allocation_rules (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
     pcf_id       TEXT NOT NULL REFERENCES pcf_definitions(id),
-    stage        TEXT NOT NULL,
+    -- NULL stage is the default rule, applied to every stage without its own.
+    stage        TEXT,
     method       TEXT NOT NULL CHECK (method IN ('mass', 'economic', 'physical_causality', 'none')),
     basis_value  REAL,
     basis_total  REAL,

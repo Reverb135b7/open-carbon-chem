@@ -1,28 +1,25 @@
 """Excel workbook generation for OpenCarbonChem reports.
 
-Features
+Contents
 --------
-- Summary sheet: organisation total, GWP set, run ID, period
-- Per-scope sheets: Scope 1, 2, 3 totals by category and gas
-- Activity/factor detail sheet: every emission row (AD, EF, factor ID, gas,
-  GWP, CO₂e)
-- Reconciliation sheet: derived totals vs ``total_co2e_kg`` flag (match / mismatch)
-- Optional chart sheets from M7/M8 (simple bar tables; kaleido-dependent images
-  may be added later)
-- Raises ``ReconciliationError`` if derived total differs from ``total_co2e_kg``
+- ``Summary``: run ID, GWP set, period, organisation total (kg and t)
+- ``Scope1_Detail`` / ``Scope2_Detail`` / ``Scope3_Detail`` (for the scopes that
+  were reported): every emission row with the activity value and unit, the
+  factor applied (value, unit, ID), the gas, GWP and GWP set, and the resulting
+  emissions and CO2e
+- ``Reconciliation``: the total re-derived from the rows next to the report
+  total, with an explicit match flag
 
-Design notes
-------------
-- All numbers come from the same ``calculation_results`` table, so there is no
-  possibility of diverging totals between the Excel and the stored record.
-- The reconciliation guard is always on — if the derivation fails, generation
-  is aborted.
+The guard is always on: if the derived total does not match the report total,
+``build_excel_report`` raises :class:`ReconciliationError` and nothing is
+written. All numbers come from the same ``EmissionResult`` rows, so the detail
+sheets and the summary cannot diverge.
 """
 
 from __future__ import annotations
 
 import io
-from typing import Any, Dict, List, Optional
+from typing import Any, List
 
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
@@ -31,9 +28,6 @@ from openpyxl.utils import get_column_letter
 from ..accounting.aggregate import OrganizationReport, ScopeResult
 from ..core.calc import EmissionResult
 from ..core.exceptions import ReconciliationError
-from ..database import CarbonDatabase
-from ..factors.models import EmissionFactor
-from ..core.activity import ActivityRecord
 
 # -- style helpers -------------------------------------------------------- #
 
@@ -167,8 +161,12 @@ class ExcelWorkbook:
             "Quantity",
             "Unit",
             "Gas",
-            "Emissions (kg)",
-            "CO₂e (kg)",
+            "Factor value",
+            "Factor unit",
+            "GWP",
+            "GWP set",
+            "Emissions (kg gas)",
+            "CO2e (kg)",
             "Factor ID",
         ]
         for col_idx, h in enumerate(headers, start=1):
@@ -180,16 +178,23 @@ class ExcelWorkbook:
             ws.cell(row=row_idx, column=1, value=r.activity_id).font = _DETAIL_FONT
             ws.cell(row=row_idx, column=2, value=r.category).font = _DETAIL_FONT
             ws.cell(row=row_idx, column=3, value=r.substance).font = _DETAIL_FONT
-            ws.cell(row=row_idx, column=4, value=r.emissions_kg).font = _DETAIL_FONT
-            ws.cell(row=row_idx, column=4).number_format = "0.00"
+            # The quantity column must carry the activity value: writing
+            # emissions here made the audit sheet misstate its own inputs.
+            ws.cell(row=row_idx, column=4, value=r.activity_value).font = _DETAIL_FONT
+            ws.cell(row=row_idx, column=4).number_format = "0.000"
             ws.cell(row=row_idx, column=5, value=r.activity_unit).font = _DETAIL_FONT
             ws.cell(row=row_idx, column=6, value=r.gas or "").font = _DETAIL_FONT
-            ws.cell(row=row_idx, column=7, value=r.emissions_kg).font = _DETAIL_FONT
-            ws.cell(row=row_idx, column=7).number_format = "0.00"
-            ws.cell(row=row_idx, column=8, value=r.co2e_kg).font = _DETAIL_FONT
-            ws.cell(row=row_idx, column=8).number_format = "0.00"
-            ws.cell(row=row_idx, column=9, value=r.factor_id).font = _DETAIL_FONT
-        _auto_width(ws, 1, 9)
+            ws.cell(row=row_idx, column=7, value=r.factor_value).font = _DETAIL_FONT
+            ws.cell(row=row_idx, column=7).number_format = "0.0000"
+            ws.cell(row=row_idx, column=8, value=r.factor_unit).font = _DETAIL_FONT
+            ws.cell(row=row_idx, column=9, value=r.gwp if r.gwp is not None else "—").font = _DETAIL_FONT
+            ws.cell(row=row_idx, column=10, value=r.gwp_set or "—").font = _DETAIL_FONT
+            ws.cell(row=row_idx, column=11, value=r.emissions_kg).font = _DETAIL_FONT
+            ws.cell(row=row_idx, column=11).number_format = "0.000"
+            ws.cell(row=row_idx, column=12, value=r.co2e_kg).font = _DETAIL_FONT
+            ws.cell(row=row_idx, column=12).number_format = "0.000"
+            ws.cell(row=row_idx, column=13, value=r.factor_id).font = _DETAIL_FONT
+        _auto_width(ws, 1, 13)
 
     # -- reconciliation sheet --------------------------------------------- #
     def _write_reconciliation(self, ws) -> None:
@@ -240,7 +245,6 @@ class ExcelReport:
 
     def save_to_bytes(self) -> bytes:
         """Return the workbook as bytes."""
-        from io import BytesIO
         buf = io.BytesIO()
         self.workbook.wb.save(buf)
         buf.seek(0)

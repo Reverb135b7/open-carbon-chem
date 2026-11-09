@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from typing import Iterable
 
 from ..core.calc import EmissionResult
+from ..core.exceptions import BoundaryError
 
 __all__ = ["ScopeResult"]
 
@@ -24,7 +25,19 @@ class ScopeResult:
 
     @classmethod
     def from_results(cls, scope: int, results: Iterable[EmissionResult]) -> "ScopeResult":
-        return cls(scope=scope, results=tuple(results))
+        """Bind rows to a scope, refusing rows that were classified differently.
+
+        A ScopeResult labelled Scope 2 that contains a Scope 1 row would report
+        that row under the wrong scope in every aggregate and report.
+        """
+        materialised = tuple(results)
+        for result in materialised:
+            if result.scope != scope:
+                raise BoundaryError(
+                    f"activity {result.activity_id} is scope {result.scope}, but the "
+                    f"result is being reported as Scope {scope}."
+                )
+        return cls(scope=scope, results=materialised)
 
     @property
     def total_kg(self) -> float:

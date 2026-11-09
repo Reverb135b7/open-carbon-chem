@@ -2,20 +2,25 @@
 
 Features
 --------
-- Cover page: project name, run ID, date, GWP set used
-- Scope breakdown: stacked bar of CO₂e by scope (1, 2, 3)
-- Methodology appendix: boundary document reference, GWP set, formulae
-  (E = AD × EF, CO₂e = Σ E_g × GWP_g)
-- Key results table: scope totals, organisation total, key assumptions
+- Cover page: organisation name, run ID, period, GWP set used
+- Scope breakdown: totals for every reported scope (missing scopes are shown
+  as "not reported", never as a number borrowed from another scope)
+- Methodology appendix: optional boundary document reference, GWP set, formulae
+  (E = AD x EF, CO2e = sum E_g x GWP_g)
+- Key results table: organisation total and period metadata
 - Limitations note: synthetic data, not for official ESG reporting
-- Raises ``PDFExportError`` on any generation failure
+- Raises ``PDFExportError`` when generation fails or when the supplied rows do
+  not reconcile with the report total
 
-From guide §11/§13/§14 / roadmap row 10 (currently "Partial").
+All text is restricted to the WinAnsi character set of the built-in Helvetica
+font, so subscripts or Greek letters are written out (CO2e, sum) rather than
+rendered as missing-glyph boxes.
 """
 
 from __future__ import annotations
 
 import io
+from typing import Iterable
 
 from reportlab.lib.pagesizes import LETTER
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -25,17 +30,14 @@ from reportlab.platypus import (
     Spacer,
     Table,
     TableStyle,
-    HRFlowable,
     KeepTogether,
 )
-from reportlab.lib.units import inch, mm
-from reportlab.lib.colors import HexColor, white, black
+from reportlab.lib.units import inch
+from reportlab.lib.colors import HexColor, white
 
 from ..accounting.aggregate import OrganizationReport
 from ..core.calc import EmissionResult
 from ..core.exceptions import PDFExportError
-from ..factors.models import EmissionFactor
-from ..core.activity import ActivityRecord
 
 # -- style definitions ---------------------------------------------------- #
 
@@ -72,36 +74,27 @@ _INDENTED_STYLE = ParagraphStyle(
     bulletIndent=0,
 )
 
-_TABLE_HEADER_STYLE = _STYLES["Normal"]
-_TABLE_HEADER_STYLE.fontSize = 9
-_TABLE_HEADER_STYLE.bold = True
-
-_TABLE_CELL_STYLE = _STYLES["Normal"]
-_TABLE_CELL_STYLE.fontSize = 8
-
-_GRID = TableStyle(
-    [
-        ("BOX", (0, 0), (-1, -1), 0.5, HexColor("#AAAAAA")),
-        ("GRID", (0, 0), (-1, -1), 0.25, HexColor("#CCCCCC")),
-        ("VALIGN", (0, 0), (-1, -1), "TOP"),
-    ]
-)
-
-# -- PDF report builder --------------------------------------------------- #
+_METHODOLOGY_ITEMS = [
+    "- Emissions calculated as E = Activity Data x Emission Factor "
+    "(one engine: opencarbonchem.core.calc).",
+    "- CO2e conversion uses IPCC {gwp_set} GWP values: "
+    "CO2e = sum over gases of (E_g x GWP_g).",
+    "- Scope 1: stationary combustion, mobile combustion, fugitive emissions, process emissions.",
+    "- Scope 2: purchased electricity, steam, heat and cooling (location-based method; "
+    "market-based totals are reported separately when contract factors are supplied).",
+    "- Scope 3: GHG Protocol categories s3_cat01-s3_cat15.",
+    "- Emission factors carry review_status=illustrative|published|verified; synthetic "
+    "factors are labelled SYNTHETIC.",
+]
 
 
 class PDFReport:
-    """Build an executive-summary PDF from an ``OrganizationReport`` and
-    calculation results.
-
-    The PDF is intentionally concise — it is meant for review and presentation,
-    not for detailed audit (the Excel workbook serves that purpose).
-    """
+    """Build an executive-summary PDF from an ``OrganizationReport`` and rows."""
 
     def __init__(
         self,
         report: OrganizationReport,
-        emission_results: List[EmissionResult],
+        emission_results: Iterable[EmissionResult],
         *,
         gwp_set: str = "AR6",
         run_id: str | None = None,
@@ -110,7 +103,7 @@ class PDFReport:
         boundary_document: str | None = None,
     ) -> None:
         self.report = report
-        self.emission_results = emission_results
+        self.emission_results = tuple(emission_results)
         self.gwp_set = gwp_set
         self.run_id = run_id
         self.period_label = period_label
@@ -118,8 +111,35 @@ class PDFReport:
         self.boundary_document = boundary_document
         self.buffer = io.BytesIO()
 
+    # -- helpers ------------------------------------------------------------ #
+    def _reconcile(self) -> float:
+        """Return the row-derived total, refusing to publish a mismatched report."""
+        derived = sum(r.co2e_kg for r in self.emission_results)
+        if abs(derived - self.report.total_kg) > 1e-6:
+            raise PDFExportError(
+                f"row total {derived:g} kg does not match report total "
+                f"{self.report.total_kg:g} kg"
+            )
+        return derived
+
+    def scope_rows(self) -> list[list[str]]:
+        """Scope lines keyed by the scope actually reported (never by position)."""
+        by_scope = self.report.by_scope()
+        rows = [["Scope", "CO2e (kg)", "CO2e (t)"]]
+        for scope in (1, 2, 3):
+            if scope in by_scope:
+                kg = by_scope[scope]
+                rows.append([f"Scope {scope}", f"{kg:,.1f}", f"{kg / 1000:,.3f}"])
+            else:
+                rows.append([f"Scope {scope}", "not reported", "-"])
+        rows.append(["Total", f"{self.report.total_kg:,.1f}", f"{self.report.total_t:,.3f}"])
+        return rows
+
+    # -- build -------------------------------------------------------------- #
     def build(self) -> "PDFReport":
         """Render the PDF into the internal buffer."""
+        self._reconcile()
+
         doc = SimpleDocTemplate(
             self.buffer,
             pagesize=LETTER,
@@ -133,14 +153,14 @@ class PDFReport:
 
         # ---- Cover page ----
         elements.append(Spacer(1, 1.5 * inch))
-        elements.append(Paragraph(f"{self.organisation_name}", _TITLE_STYLE))
+        elements.append(Paragraph(self.organisation_name, _TITLE_STYLE))
         elements.append(Spacer(1, 0.3 * inch))
-        elements.append(Paragraph("OpenCarbonChem — Executive Summary", _SUBTITLE_STYLE))
+        elements.append(Paragraph("OpenCarbonChem - Executive Summary", _SUBTITLE_STYLE))
         elements.append(Spacer(1, 0.3 * inch))
 
         cover_info = [
-            ["Run ID", self.run_id or "—"],
-            ["Period", self.period_label or "—"],
+            ["Run ID", self.run_id or "-"],
+            ["Period", self.period_label or "-"],
             ["GWP set", self.gwp_set],
             ["Organisation total (kg)", f"{self.report.total_kg:,.1f}"],
             ["Organisation total (t)", f"{self.report.total_t:,.3f}"],
@@ -163,44 +183,58 @@ class PDFReport:
 
         # ---- Scope breakdown ----
         elements.append(Paragraph("Scope Breakdown", _HEADING1))
-        # Simple text summary since we don't have charting here
-        scope_text = (
-            f"Scope 1: {self.report.scope_results[0].total_kg if self.report.scope_results else 0:,.1f} kg CO₂e\n"
-            f"Scope 2: {self.report.scope_results[1].total_kg if len(self.report.scope_results) > 1 else 0:,.1f} kg CO₂e\n"
-            f"Scope 3: {self.report.scope_results[2].total_kg if len(self.report.scope_results) > 2 else 0:,.1f} kg CO₂e\n"
-            f"Organisation total: {self.report.total_kg:,.1f} kg CO₂e"
+        scope_table = Table(self.scope_rows(), colWidths=[1.6 * inch, 1.7 * inch, 1.3 * inch])
+        scope_table.setStyle(
+            TableStyle(
+                [
+                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("FONTSIZE", (0, 0), (-1, -1), 9),
+                    ("BACKGROUND", (0, 0), (-1, 0), HexColor("#E0E0E0")),
+                    ("GRID", (0, 0), (-1, -1), 0.5, HexColor("#AAAAAA")),
+                    ("ALIGN", (1, 0), (-1, -1), "RIGHT"),
+                ]
+            )
         )
-        elements.append(Paragraph(scope_text, _BODY_STYLE))
+        elements.append(scope_table)
+        elements.append(Spacer(1, 0.2 * inch))
+        elements.append(
+            Paragraph(
+                "A scope shown as 'not reported' has no rows in this run; it is not "
+                "treated as a zero. Confirm before publishing the inventory.",
+                _BODY_STYLE,
+            )
+        )
         elements.append(Spacer(1, 0.3 * inch))
 
         # ---- Methodology appendix ----
         elements.append(Paragraph("Methodology Appendix", _HEADING1))
-        methodology_items = [
-            "• Emissions calculated as E = Activity Data × Emission Factor (engine: "
-            "``e = ad × ef``)",
-            f"• CO₂e conversion uses IPCC {self.gwp_set} GWP values: "
-            f"``CO₂e = Σ E_g × GWP_g``",
-            "• Scope 1: stationary combustion, mobile combustion, fugitive emissions, process emissions",
-            "• Scope 2: purchased electricity, steam, heat, cooling (location‑based method)",
-            "• Scope 3: all 15 GHG Protocol categories (purchased goods, capital goods, "
-            "fuel‑related activities, upstream/downstream transport, waste, business travel, "
-            "commuting, leased assets, use of sold products, end‑of‑life, franchises, investments)",
-            "• Uncertainty: all emission factors are labelled ``review_status=illustrative`` "
-            "or ``published``; synthetic data clearly marked.",
-        ]
-        for item in methodology_items:
-            elements.append(Paragraph(item, _INDENTED_STYLE))
+        if self.boundary_document:
+            elements.append(
+                Paragraph(f"Boundary document: {self.boundary_document}", _BODY_STYLE)
+            )
+        else:
+            elements.append(
+                Paragraph(
+                    "Boundary document: not supplied for this run. The organisational "
+                    "boundary and consolidation method must be documented before the "
+                    "report is used externally.",
+                    _BODY_STYLE,
+                )
+            )
+        for item in _METHODOLOGY_ITEMS:
+            elements.append(Paragraph(item.format(gwp_set=self.gwp_set), _INDENTED_STYLE))
         elements.append(Spacer(1, 0.2 * inch))
 
         # ---- Key results table ----
         elements.append(Paragraph("Key Results", _HEADING1))
         results_data = [
             ["Metric", "Value"],
-            ["Organisation total (kg)", f"{self.report.total_kg:,.1f}"],
-            ["Organisation total (t)", f"{self.report.total_t:,.3f}"],
+            ["Organisation total (kg CO2e)", f"{self.report.total_kg:,.1f}"],
+            ["Organisation total (t CO2e)", f"{self.report.total_t:,.3f}"],
             ["GWP set used", self.gwp_set],
-            ["Run ID", self.run_id or "—"],
-            ["Period", self.period_label or "—"],
+            ["Run ID", self.run_id or "-"],
+            ["Period", self.period_label or "-"],
+            ["Rows reconciled", str(len(self.emission_results))],
         ]
         results_table = Table(results_data, colWidths=[3 * inch, 2.5 * inch])
         results_table.setStyle(
@@ -215,17 +249,19 @@ class PDFReport:
                 ]
             )
         )
-        elements.append(results_table)
+        elements.append(KeepTogether([results_table]))
         elements.append(Spacer(1, 0.3 * inch))
 
         # ---- Limitations ----
         elements.append(Paragraph("Limitations", _HEADING1))
         limitations_text = (
-            "This report uses synthetic data (review_status=illustrative, source_org=SYNTHETIC) "
-            "for demonstration purposes only. It must not be presented as official ESG reporting "
-            "without independent verification and the use of published, geographically appropriate "
-            "emission factors. All numbers are re‑derived from stored calculation records so "
-            "totals always match the underlying database."
+            "This report was generated from the calculation rows supplied to the "
+            "report builder; the totals above were re-derived from those rows and "
+            "checked against the report total. If the packaged illustrative factors "
+            "(review_status=illustrative, source_org=SYNTHETIC) were used, the numbers "
+            "are demonstration data only and must not be presented as official ESG "
+            "reporting without independent verification and published, geographically "
+            "appropriate emission factors."
         )
         elements.append(Paragraph(limitations_text, _BODY_STYLE))
 
@@ -245,14 +281,9 @@ class PDFReport:
         return self.buffer.read()
 
 
-# ------------------------------------------------------------------------ #
-# PDF report convenience --------------------------------------------------- #
-# ------------------------------------------------------------------------ #
-
-
 def build_pdf_report(
     report: OrganizationReport,
-    emission_results: List[EmissionResult],
+    emission_results: Iterable[EmissionResult],
     *,
     gwp_set: str = "AR6",
     run_id: str | None = None,
@@ -262,10 +293,11 @@ def build_pdf_report(
 ) -> PDFReport:
     """Convenience wrapper that builds a ``PDFReport`` instance.
 
-    Raises ``PDFExportError`` if the PDF cannot be generated.
+    Raises ``PDFExportError`` if the PDF cannot be generated or the rows do not
+    reconcile with the report total.
     """
     try:
-        pdf = PDFReport(
+        return PDFReport(
             report,
             emission_results,
             gwp_set=gwp_set,
@@ -274,6 +306,7 @@ def build_pdf_report(
             organisation_name=organisation_name,
             boundary_document=boundary_document,
         ).build()
-        return pdf
+    except PDFExportError:
+        raise
     except Exception as exc:
         raise PDFExportError(f"PDF generation failed: {exc}") from exc
