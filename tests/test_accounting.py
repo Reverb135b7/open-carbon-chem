@@ -16,14 +16,14 @@ from opencarbonchem.accounting import (
 from opencarbonchem.core.activity import ActivityRecord
 from opencarbonchem.core.exceptions import BoundaryError, MissingFactorError
 from opencarbonchem.factors.models import EmissionFactor
-from opencarbonchem.factors.registry import FactorRegistry
+from opencarbonchem.factors.registry import FactorRegistry, illustrative_seed_path
 
 PERIOD = dict(period_start=date(2024, 1, 1), period_end=date(2024, 12, 31))
 
 
 @pytest.fixture(scope="module")
 def registry() -> FactorRegistry:
-    return FactorRegistry.from_csv()
+    return FactorRegistry.from_csv(illustrative_seed_path())
 
 
 def _act(**overrides) -> ActivityRecord:
@@ -211,21 +211,23 @@ def test_scope_result_rejects_rows_from_another_scope(registry):
 
 
 @pytest.mark.integration
-def test_demo_dataset_applies_refrigerant_gwp():
-    """R-134a leakage must be converted with its GWP, not a pre-combined CO2e factor."""
+def test_demo_dataset_uses_published_factors():
+    """The shipped dataset must reconcile against the packaged published factor set."""
     from pathlib import Path
 
     from opencarbonchem.accounting import calculate_inventory
     from opencarbonchem.core.activity import load_activities_csv
-    from opencarbonchem.factors import FactorRegistry, default_seed_path
+    from opencarbonchem.factors import FactorRegistry
 
     csv_path = Path(__file__).resolve().parent.parent / "data" / "activities_synthetic.csv"
-    registry = FactorRegistry.from_csv(default_seed_path())
+    registry = FactorRegistry.from_csv()
     report, rows = calculate_inventory(load_activities_csv(csv_path), registry)
 
     refrigerant = next(r for r in rows if r.activity_id == "ACT-003")
-    assert refrigerant.gas == "HFC134a"
-    # 500 kg charge x 1.5 % leak = 7.5 kg R-134a x AR6 GWP 1530
-    assert refrigerant.co2e_kg == pytest.approx(11_475.0)
-    assert report.by_scope()[1] == pytest.approx(4_555_075.0)
-    assert report.total_kg == pytest.approx(5_547_075.0)
+    # 7.5 kg R-134a released x DEFRA HFC-134a factor 1300 kg CO2e/kg
+    assert refrigerant.co2e_kg == pytest.approx(9_750.0)
+    assert report.by_scope()[1] == pytest.approx(4_550_678.6)
+    assert report.by_scope()[2] == pytest.approx(423_082.5)
+    assert report.by_scope()[3] == pytest.approx(72_909.8674, abs=0.01)
+    assert report.total_kg == pytest.approx(5_046_670.9674, abs=0.01)
+    assert report.reconcile().ok

@@ -170,16 +170,16 @@ with col2:
         st.caption(f"cradle-to-gate, {len(pcf.items)} life-cycle rows")
 
 st.caption(
-    "All values use the illustrative seed factors; they are not official emission "
-    "factors and this dashboard is not an ESG disclosure."
+    "Activity data are synthetic; emission factors are published DESNZ 2024 / IPCC "
+    "defaults (see the factor page). This dashboard is not an ESG disclosure."
 )
 
 st.sidebar.title("ℹ️ About this demo")
 st.sidebar.markdown(
     f"- **Dataset**: `{DATA_CSV.relative_to(REPO_ROOT)}` — {len(_activities())} synthetic "
     "rows covering Scope 1, 2 and 3.\n"
-    "- **Factors**: `src/opencarbonchem/factors/data/illustrative_factors.csv` — every row is "
-    "`review_status=illustrative`, `source_org=SYNTHETIC`.\n"
+    "- **Factors**: `src/opencarbonchem/factors/data/published_factors.csv` — DESNZ 2024 and IPCC 2006 values, "
+    "`review_status=published`, each with a source reference.\n"
     "- **Purpose**: portfolio demonstration; no data here is suitable for real ESG reporting.\n"
     "- **Standards**: GHG Protocol Corporate Standard, ISO 14067 (PCF), IPCC AR6 GWPs."
 )

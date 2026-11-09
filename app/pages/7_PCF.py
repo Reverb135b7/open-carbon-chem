@@ -190,7 +190,7 @@ with col_left:
                 factor = _registry().find(
                     activity_category=category,
                     substance=substance,
-                    geography="GLOBAL",
+                    geography="GB",
                     year=2024,
                     gas=gas or None,
                 )

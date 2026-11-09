@@ -8,14 +8,14 @@ from opencarbonchem.accounting import OrganizationReport, calculate_scope1
 from opencarbonchem.accounting.base import ScopeResult
 from opencarbonchem.core.activity import ActivityRecord
 from opencarbonchem.core.exceptions import BoundaryError
-from opencarbonchem.factors.registry import FactorRegistry
+from opencarbonchem.factors.registry import FactorRegistry, illustrative_seed_path
 
 PERIOD = dict(period_start=date(2024, 1, 1), period_end=date(2024, 12, 31))
 
 
 @pytest.fixture(scope="module")
 def registry() -> FactorRegistry:
-    return FactorRegistry.from_csv()
+    return FactorRegistry.from_csv(illustrative_seed_path())
 
 
 def _act(**overrides) -> ActivityRecord:

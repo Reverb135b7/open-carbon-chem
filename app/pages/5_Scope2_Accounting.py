@@ -66,8 +66,8 @@ with col_left:
         gas = st.text_input("Gas (optional)", help="CO2e when the factor is already combined")
         geography = st.text_input(
             "Geography",
-            value="GLOBAL",
-            help="Exact geography beats GLOBAL; GB, for example, has its own grid factor",
+            value="GB",
+            help="Use the country the site is in, e.g. GB; exact geography beats GLOBAL",
         )
         data_type = st.selectbox("Data type", options=["primary", "secondary"])
         period_start = st.date_input("Period start", value=date(2024, 1, 1))
@@ -85,7 +85,7 @@ with col_left:
                     quantity=quantity,
                     unit=unit,
                     gas=gas or None,
-                    geography=geography or "GLOBAL",
+                    geography=geography or "GB",
                     data_type=data_type,
                     period_start=period_start,
                     period_end=period_end,

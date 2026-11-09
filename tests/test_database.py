@@ -11,12 +11,12 @@ from opencarbonchem.core.activity import ActivityRecord
 from opencarbonchem.core.exceptions import BoundaryError
 from opencarbonchem.core.calc import compute_emissions
 from opencarbonchem.database import CarbonDatabase
-from opencarbonchem.factors.registry import FactorRegistry
+from opencarbonchem.factors.registry import FactorRegistry, illustrative_seed_path
 
 
 @pytest.fixture(scope="module")
 def registry() -> FactorRegistry:
-    return FactorRegistry.from_csv()
+    return FactorRegistry.from_csv(illustrative_seed_path())
 
 
 @pytest.mark.integration

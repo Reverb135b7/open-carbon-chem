@@ -29,15 +29,23 @@ from typing import Iterable, Iterator
 from ..core.exceptions import AmbiguousFactorError, MissingFactorError
 from .models import EmissionFactor
 
-__all__ = ["FactorRegistry", "default_seed_path"]
+__all__ = ["FactorRegistry", "default_seed_path", "illustrative_seed_path"]
 
-#: Packaged seed data — illustrative factors for testing only.
-_SEED = Path(__file__).parent / "data" / "illustrative_factors.csv"
+#: Packaged published factors (DESNZ 2024 / IPCC 2006) — the product default.
+_SEED = Path(__file__).parent / "data" / "published_factors.csv"
+
+#: Illustrative factors, kept for software tests and synthetic demonstrations.
+_ILLUSTRATIVE = Path(__file__).parent / "data" / "illustrative_factors.csv"
 
 
 def default_seed_path() -> Path:
-    """Path of the packaged illustrative factor CSV."""
+    """Path of the packaged published factor CSV."""
     return _SEED
+
+
+def illustrative_seed_path() -> Path:
+    """Path of the packaged illustrative factor CSV (tests and demos only)."""
+    return _ILLUSTRATIVE
 
 
 def _key(text: str) -> str:

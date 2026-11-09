@@ -26,13 +26,13 @@ Every emission factor must carry the following provenance fields:
 | ``published``  | Transcribed from a published authoritative source with a ``source_reference`` recorded. May be used in demonstrations but must not be presented as independently verified. |
 | ``verified``   | Independently checked against the source document. Still carries the ``source_reference`` and must not be presented as “certified” or “officially verified” without the relevant assessment. |
 
-## 3. Synthetic Data Policy
+## 3. Synthetic and Published Data
 
-- All factors in the packaged seed CSV (`src/opencarbonchem/factors/data/illustrative_factors.csv`) are labelled ``review_status=illustrative`` and ``source_org=SYNTHETIC``.
-- Synthetic factors must **not** be presented as official emission factors in any output (dashboard, report, CLI, etc.).
-- The dashboard and all reporting modules explicitly label synthetic data: ``(SYNTHETIC)`` in notes and UI.
-- New factors entered by the user via the Emission Factor DB page must also be clearly labelled;
-  the UI prompts for ``review_status`` and defaults to ``illustrative`` if uncertain.
+- The default seed CSV (`src/opencarbonchem/factors/data/published_factors.csv`) holds values transcribed from the DESNZ 2024 full set and IPCC 2006 Guidelines. Every row is ``review_status=published`` with a document reference and version; per-factor sources are listed in ``docs/FACTOR_SOURCES.md``.
+- ``published`` means transcribed, not independently verified. No row may be labelled ``verified`` without the corresponding check being recorded, and none is currently.
+- The synthetic seed (`illustrative_factors.csv`, ``source_org=SYNTHETIC``) is retained for software tests and demonstrations. Synthetic factors must **not** be presented as official emission factors in any output (dashboard, report, CLI, etc.).
+- Factors flagged ``illustrative`` cause the report writers to append the synthetic-data warning; the dashboard shows ``review_status`` and ``source_org`` for every factor used.
+- New factors entered via the Emission Factor DB page keep whatever ``review_status`` the user selects; the UI defaults to ``illustrative`` if uncertain.
 - It is an explicit policy violation to auto‑set ``review_status=published`` or ``verified`` for synthetic data.
 
 ## 4. Provenance in Reports

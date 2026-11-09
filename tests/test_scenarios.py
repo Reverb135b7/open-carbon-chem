@@ -23,7 +23,7 @@ from opencarbonchem.core.calc import compute_emissions
 from opencarbonchem.core.exceptions import ScenarioError
 from opencarbonchem.core.gwp import DEFAULT_GWP_SET
 from opencarbonchem.database import CarbonDatabase
-from opencarbonchem.factors import EmissionFactor, FactorRegistry
+from opencarbonchem.factors import EmissionFactor, FactorRegistry, illustrative_seed_path
 from opencarbonchem.scenarios import (
     LEVER_KINDS,
     EnergyEfficiency,
@@ -50,7 +50,7 @@ PERIOD = dict(period_start=date(2024, 1, 1), period_end=date(2024, 12, 31))
 
 @pytest.fixture(scope="module")
 def registry() -> FactorRegistry:
-    return FactorRegistry.from_csv()
+    return FactorRegistry.from_csv(illustrative_seed_path())
 
 
 def act(activity_id: str, category: str, substance: str, quantity: float, unit: str,
@@ -126,7 +126,7 @@ def test_baseline_matches_engine(baseline):
     assert not result.changed
 
     # Consistent with the corporate inventory for the same rows.
-    report = OrganizationReport.from_results([calculate_scope1([baseline[1][0]], FactorRegistry.from_csv())])
+    report = OrganizationReport.from_results([calculate_scope1([baseline[1][0]], FactorRegistry.from_csv(illustrative_seed_path()))])
     assert report.total_kg == pytest.approx(90.0)
 
 

@@ -133,8 +133,9 @@ Seven levers for scenario modelling, each a pure function ``entries → entries`
 
 ## 11. Assumptions and Limitations
 
-- All packaged emission factors are labelled ``review_status=illustrative`` or ``published``;
-  synthetic data is clearly marked ``source_org=SYNTHETIC`` and must not be presented as official.
+- The default packaged factors are ``review_status=published`` (DESNZ 2024, IPCC 2006)
+  with document references; the synthetic test set is marked ``source_org=SYNTHETIC``.
+  Published values retain their source's GWP basis (DEFRA uses AR5 for CO2e factors).
 - The unit engine refuses incompatible conversions; no silent unit conversion is ever applied.
 - Monte Carlo distributions are always right‑skewed or bounded; negative emission values are physically meaningless and truncated.
 - All calculations use the same engine; there is no hand-rolled math that can drift from the accounting methodology.

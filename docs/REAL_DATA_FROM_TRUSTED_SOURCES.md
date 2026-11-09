@@ -4,16 +4,21 @@
 "You want to get real background data from trusted sources."
 
 ## Current Status
-The OpenCarbonChem project currently uses **synthetic data** with explicit labeling:
-- `review_status=illustrative`
-- `source_org=SYNTHETIC`
-- All 10 activities in `activities_synthetic.csv` are marked as demo/fictional data
 
-This was a deliberate design choice for Milestone 11 to ensure:
-✅ No false claims about official emissions data
-✅ Full reproducibility (same seed → byte-identical output)
-✅ No dependency on external APIs during development/testing
-✅ Clear audit trail for all figures
+The **factor** side is implemented: `src/opencarbonchem/factors/data/published_factors.csv`
+is the default seed and is transcribed from the DESNZ 2024 full set and IPCC 2006
+defaults, with `review_status=published` and a document reference per row
+(`docs/FACTOR_SOURCES.md`).
+
+The **activity** side is still synthetic:
+
+- `data/activities_synthetic.csv` describes a fictional facility and is labelled
+  `SYNTHETIC` in every row.
+- The DEFRA / EPA / Ecoinvent connectors remain stubs that fetch nothing and return
+  an empty list, so no live data is pulled.
+
+This keeps the project free of false claims, reproducible offline, and free of network
+dependencies in the test suite.
 
 ## What "Trusted Sources" Are Available
 
@@ -25,12 +30,15 @@ This was a deliberate design choice for Milestone 11 to ensure:
 - **Last Updated**: Annual (2024 being most recent)
 - **Data Format**: HTML pages, downloadable CSV/Excel
 
-**Example factors (illustrative only, actual values vary by year)**:
-| Activity | Substance | kg CO2e per unit |
-|----------|-----------|------------------|
-| Natural gas combustion | CO2 | ~0.187 kg/kWh |
-| Diesel combustion | CO2 | ~0.251 kg/L |
-| Grid electricity (UK) | CO2 | ~0.233 kg/kWh |
+**Packaged 2024 values (exact, as published)**:
+| Activity | Substance | Factor |
+|----------|-----------|--------|
+| Natural gas combustion (gross CV) | natural gas | 0.18290 kg CO2e/kWh |
+| Diesel combustion (100% mineral) | diesel | 2.66155 kg CO2e/L |
+| Grid electricity (UK, location-based) | grid electricity | 0.20705 kg CO2e/kWh |
+
+The full table, with the component-level CO2 values actually used by the engine, is in
+`docs/FACTOR_SOURCES.md`.
 
 ### 2. **EPA AP-42 Emission Factors** - Publicly Free
 - **Source**: https://www.epa.gov/air-emissions-factor-db
@@ -94,10 +102,10 @@ If you have real emission factor CSV/Excel files from DEFRA/EPA, I can:
 Keep synthetic data as baseline, add optional real data fetching:
 
 ```text
-Current: Always synthetic → review_status=illustrative
-Proposed: Synthetic by default, real optional → 
-  review_status = real if fetched, illustrative if not
-  source_org = DEFRA/EPA if real, SYNTHETIC if not
+Current: published factors packaged, connectors are stubs
+Proposed: keep the packaged published set, add fetch-and-cache in the connectors
+  review_status = published for transcribed rows, verified only after an explicit check
+  source_org = DESNZ/IPCC for packaged rows, the agency name for fetched rows
 ```
 
 This gives you the best of both worlds:

@@ -7,12 +7,12 @@ import pytest
 from opencarbonchem.core.exceptions import AmbiguousFactorError, MissingFactorError
 from opencarbonchem.core.activity import ActivityRecord
 from opencarbonchem.factors.models import EmissionFactor
-from opencarbonchem.factors.registry import FactorRegistry, default_seed_path
+from opencarbonchem.factors.registry import FactorRegistry, illustrative_seed_path, default_seed_path
 
 
 @pytest.fixture(scope="module")
 def registry() -> FactorRegistry:
-    return FactorRegistry.from_csv()
+    return FactorRegistry.from_csv(illustrative_seed_path())
 
 
 def _factor(**overrides) -> EmissionFactor:
@@ -180,3 +180,40 @@ def test_activity_reporting_year_feeds_lookup(registry):
         gas=activity.gas,
     )
     assert factor.factor_id == "EF-ILL-002"  # 2023 vintage
+
+
+@pytest.mark.integration
+def test_published_seed_is_the_default():
+    registry = FactorRegistry.from_csv()
+    assert len(registry) == 11
+    for factor in registry:
+        assert factor.review_status == "published"
+        assert factor.source_org in {"DESNZ", "IPCC"}
+        assert factor.source_reference
+        assert factor.version
+        assert factor.notes
+
+
+@pytest.mark.integration
+def test_published_seed_uses_uk_geography_and_ipcc_fallback():
+    registry = FactorRegistry.from_csv()
+    grid = registry.find(
+        activity_category="purchased_electricity",
+        substance="grid_electricity",
+        geography="GB",
+        year=2024,
+        gas="CO2e",
+    )
+    assert grid.value == pytest.approx(0.20705)
+    assert grid.geography == "GB"
+
+    # No UK-specific calcination factor: the GLOBAL IPCC default must be used.
+    limestone = registry.find(
+        activity_category="process_emissions",
+        substance="limestone",
+        geography="GB",
+        year=2024,
+        gas="CO2",
+    )
+    assert limestone.geography == "GLOBAL"
+    assert limestone.value == pytest.approx(0.43971)

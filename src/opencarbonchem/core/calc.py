@@ -61,6 +61,11 @@ class EmissionResult:
     gwp: float | None    # None when the factor is already combined CO2e
     gwp_set: str | None
     co2e_kg: float
+    # Factor provenance, carried through so reports can be audited.
+    source_org: str = ""
+    source_reference: str = ""
+    review_status: str = ""
+    uncertainty_pct: float | None = None
 
     @property
     def co2e_t(self) -> float:
@@ -141,6 +146,10 @@ def compute_emissions(
         gwp=applied_gwp,
         gwp_set=applied_set,
         co2e_kg=co2e_kg,
+        source_org=factor.source_org,
+        source_reference=factor.source_reference,
+        review_status=factor.review_status,
+        uncertainty_pct=factor.uncertainty_pct,
     )
 
 
@@ -160,6 +169,10 @@ def _result_to_dict(result: EmissionResult) -> dict:
         "emissions_kg": result.emissions_kg,
         "gwp": result.gwp,
         "gwp_set": result.gwp_set,
+        "source_org": result.source_org,
+        "source_reference": result.source_reference,
+        "review_status": result.review_status,
+        "uncertainty_pct": result.uncertainty_pct,
         "co2e_kg": result.co2e_kg,
     }
 

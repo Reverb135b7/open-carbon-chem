@@ -13,7 +13,7 @@ import pytest
 
 from opencarbonchem.cli import calculate_inventory, load_activities, main
 from opencarbonchem.core.exceptions import MissingFactorError
-from opencarbonchem.factors import FactorRegistry
+from opencarbonchem.factors import FactorRegistry, illustrative_seed_path
 
 pytestmark = pytest.mark.unit
 
@@ -64,7 +64,7 @@ def test_load_activities_rejects_a_malformed_row(tmp_path):
 
 
 def test_calculate_inventory_rolls_up_all_three_scopes(activities_csv):
-    registry = FactorRegistry.from_csv()
+    registry = FactorRegistry.from_csv(illustrative_seed_path())
     report, rows = calculate_inventory(load_activities(activities_csv), registry)
     # Hand check: 180 + 450 + 1200 = 1830 kg.
     assert report.total_kg == pytest.approx(1830.0)
@@ -82,6 +82,7 @@ def test_main_writes_both_reports(activities_csv, tmp_path):
     exit_code = main([
         "calculate",
         "--activities", str(activities_csv),
+        "--factors", str(illustrative_seed_path()),
         "--run-id", "cli-test",
         "--out", str(out),
         "--period-label", "2024",
@@ -94,7 +95,8 @@ def test_main_writes_both_reports(activities_csv, tmp_path):
 def test_main_writes_only_the_requested_report(activities_csv, tmp_path):
     out = tmp_path / "reports"
     assert main([
-        "calculate", "--activities", str(activities_csv), "--run-id", "only-excel",
+        "calculate", "--activities", str(activities_csv),
+        "--factors", str(illustrative_seed_path()), "--run-id", "only-excel",
         "--out", str(out), "--report-types", "excel",
     ]) == 0
     assert (out / "only-excel.xlsx").exists()
@@ -121,6 +123,6 @@ def test_main_returns_two_when_a_factor_is_missing(tmp_path):
 
 
 def test_missing_factor_is_the_documented_error_type():
-    registry = FactorRegistry.from_csv()
+    registry = FactorRegistry.from_csv(illustrative_seed_path())
     with pytest.raises(MissingFactorError):
         registry.find(activity_category="stationary_combustion", substance="unobtainium")

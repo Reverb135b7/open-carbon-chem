@@ -26,7 +26,7 @@ from opencarbonchem.core.exceptions import (
     PDFExportError,
     ReconciliationError,
 )
-from opencarbonchem.factors import FactorRegistry
+from opencarbonchem.factors import FactorRegistry, illustrative_seed_path
 from opencarbonchem.reporting import build_excel_report, build_pdf_report
 
 pytestmark = pytest.mark.unit
@@ -36,7 +36,7 @@ PERIOD = dict(period_start=date(2024, 1, 1), period_end=date(2024, 12, 31))
 
 @pytest.fixture(scope="module")
 def registry() -> FactorRegistry:
-    return FactorRegistry.from_csv()
+    return FactorRegistry.from_csv(illustrative_seed_path())
 
 
 def act(activity_id: str, category: str, substance: str, quantity: float, unit: str,
@@ -200,3 +200,21 @@ def test_pdf_includes_the_boundary_document_when_supplied(inventory):
         build_pdf_report(report, rows, boundary_document="BOUNDARY-2024-v3").save_to_bytes()
     )
     assert b"BOUNDARY-2024-v3" in text
+
+
+def test_excel_detail_sheet_carries_factor_provenance(inventory):
+    """The audit sheet must record where the factor came from (policy §4)."""
+    report, rows = inventory
+    excel = build_excel_report(report, rows, run_id="RUN-PROVENANCE")
+    workbook = load_workbook(io.BytesIO(excel.save_to_bytes()))
+    sheet = workbook["Scope1_Detail"]
+    headers = [cell.value for cell in sheet[2]]
+    for name in ("Source", "Reference", "Review status"):
+        assert name in headers
+
+    source_col = headers.index("Source") + 1
+    status_col = headers.index("Review status") + 1
+    reference_col = headers.index("Reference") + 1
+    assert sheet.cell(row=3, column=source_col).value == "SYNTHETIC"
+    assert sheet.cell(row=3, column=status_col).value == "illustrative"
+    assert sheet.cell(row=3, column=reference_col).value
