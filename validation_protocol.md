@@ -25,12 +25,15 @@ software release, report generation, or public demonstration of OpenCarbonChem.
 
 ## 3. Synthetic‑Data Disclaimer Validation
 
-- Every output that uses the packaged seed factors must include a disclaimer:
+- The default packaged factors are ``review_status=published`` (DESNZ 2024, IPCC 2006)
+  with a document reference per row; see ``docs/FACTOR_SOURCES.md``.
+- Whenever a run resolves any factor with ``review_status=illustrative``, the output must
+  carry the synthetic-data warning:
   "This report uses synthetic emission factors (review_status=illustrative, source_org=SYNTHETIC)
   for demonstration only. It must not be presented as official ESG reporting."
-- The dashboard ``1. Overview`` page includes this disclaimer.
-- The PDF executive summary includes a limitations section with the same text.
-- The CLI ``opencarbonchem calculate`` output appends the disclaimer.
+- The dashboard ``1. Overview`` page states that the activity data are synthetic.
+- The PDF executive summary includes a limitations section.
+- The CLI ``opencarbonchem calculate`` output reports the GWP set and factor provenance.
 
 ## 3. Unit and Dimensional Validation
 
@@ -80,7 +83,8 @@ software release, report generation, or public demonstration of OpenCarbonChem.
 
 - All 11 Streamlit pages load without JavaScript errors (checked via ``pytest‑streamlit`` or
   manual inspection).
-- Each page displays the synthetic data disclaimer where synthetic factors are used.
+- Each page states the provenance of the factors it uses; illustrations of synthetic
+  factors carry the synthetic-data warning.
 - The Excel and PDF report generation buttons are disabled (or produce a warning) when no
   calculation run is available.
 - The hotspot, sensitivity, and Monte Carlo pages render their respective tables/plots

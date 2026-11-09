@@ -179,9 +179,10 @@ DDL: `src/opencarbonchem/database/schema.sql` (idempotent `IF NOT EXISTS`).
   category + substance match → gas constraint (explicit gas, or unambiguous if
   omitted) → geography (exact beats `GLOBAL`) → year (nearest at-or-before
   reporting year). Failures raise `MissingFactorError` / `AmbiguousFactorError`.
-- Seed CSV `factors/data/illustrative_factors.csv`: every row labelled
-  `review_status=illustrative`, `source_org=SYNTHETIC`, for software testing
-  only — not to be presented as official factors.
+- Seed CSVs: `factors/data/published_factors.csv` (default) carries DESNZ 2024 and
+  IPCC 2006 values with `review_status=published` and a document reference;
+  `factors/data/illustrative_factors.csv` keeps the `SYNTHETIC` values for tests.
+  Sources and unit conversions are listed in `docs/FACTOR_SOURCES.md`.
 
 ### 4.6 `accounting/` (implemented)
 - `scope1.py`: subcategories stationary/mobile/fugitive/process; validates scope
@@ -284,7 +285,7 @@ Rules:
 | 9 | Streamlit interface | **Done** (11 pages, Overview → Report Generation, thin clients over the package API; every page and every action button exercised through `streamlit.testing` AppTest, with the resulting totals checked against the package API) |
 | 10 | Reporting (PDF/Excel), documentation, full test suite | **Done** (Excel workbook with reconciliation guard, PDF executive summary, CLI entry point,
     LICENSE/CONTRIBUTING.md, methodology/assumptions/data-dictionary/provenance-policy/validation
-    protocol docs; 219 tests passing) |
+    protocol docs; 222 tests passing) |
 | 11 | Final integration and GitHub publication | **Done locally** (CI workflow, LICENSE, CONTRIBUTING, methodology/assumptions/data-dictionary/provenance/validation docs, notebooks/, reports/). Publishing to GitHub awaits the repository owner's authorisation. |
 
 At the end of every milestone: run the test suite, check calculation

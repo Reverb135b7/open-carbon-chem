@@ -8,9 +8,9 @@ uncertainty analysis and decarbonisation scenario modelling. The calculation
 engine is independent of any user interface and every reported number carries
 the activity record, emission factor and GWP set that produced it.
 
-> **Status:** early development (v0.2.0). Milestones 1–6 are complete and
-> tested (219 tests); Scope 1/2/3 corporate accounting and Product Carbon
-> Footprints are implemented (see
+> **Status:** all eleven milestones are implemented and tested (222 tests):
+> corporate Scope 1/2/3 accounting, product carbon footprints, analytics,
+> scenarios, dashboard, reporting and CLI (see
 > [`docs/architecture.md`](docs/architecture.md) for the roadmap). Not yet
 > certified, verified or conformant with any standard — it implements
 > calculation methodologies consistent with the GHG Protocol and ISO 14064/14067.
@@ -69,7 +69,7 @@ Requires Python ≥ 3.11.
 from datetime import date
 from opencarbonchem import ActivityRecord, FactorRegistry, calculate_scope1
 
-registry = FactorRegistry.from_csv()   # packaged illustrative factors
+registry = FactorRegistry.from_csv()   # packaged published factors (DESNZ 2024 / IPCC 2006)
 
 boiler = ActivityRecord(
     activity_id="ACT-001",
@@ -100,7 +100,7 @@ python -m pytest
 app/                          # Streamlit dashboard (milestone 9, pending)
 src/opencarbonchem/
   core/       units.py, gwp.py, activity.py, calc.py, exceptions.py
-  factors/    models.py, registry.py, data/illustrative_factors.csv
+  factors/    models.py, registry.py, data/{published,illustrative}_factors.csv
   accounting/ scope1-3, boundary, aggregate, comparison
   database/   schema.sql, store.py
   pcf/                          # Product Carbon Footprint (milestone 6)
@@ -113,10 +113,15 @@ reports/    generated output
 
 ## Data provenance and honesty policy
 
-- The packaged factor CSV (`src/opencarbonchem/factors/data/illustrative_factors.csv`)
-  and the demo dataset (`data/activities_synthetic.csv`) are **synthetic**,
-  labelled `review_status=illustrative` / `source_org=SYNTHETIC`, and exist for
-  software testing only. They must not be used for reporting.
+- The packaged factor CSV (`src/opencarbonchem/factors/data/published_factors.csv`)
+  holds **published** values (DESNZ 2024 full set, IPCC 2006 defaults), each with a
+  document reference and `review_status=published`; see
+  [`docs/FACTOR_SOURCES.md`](docs/FACTOR_SOURCES.md) for every value and caveat.
+- The demo dataset (`data/activities_synthetic.csv`) is a fictional facility, clearly
+  labelled `SYNTHETIC`; it must never be presented as a real inventory.
+- `src/opencarbonchem/factors/data/illustrative_factors.csv`
+  (`review_status=illustrative`, `source_org=SYNTHETIC`) is kept for software tests
+  and synthetic demonstrations.
 - GWP values are transcribed from published IPCC AR6/AR5 tables and carry the
   source reference on the set itself.
 - Real factors you load must record their source organisation and reference;

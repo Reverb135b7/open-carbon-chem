@@ -6,9 +6,12 @@ software for their particular context.
 
 ## 1. Emission Factor Assumptions
 
-- **All packaged factors in the seed CSV (`illustrative_factors.csv`) are labelled
-  ``review_status=illustrative`` and ``source_org=SYNTHETIC``.**
-  They are **not** official emission factors and must not be presented as such.
+- **The default seed CSV (`published_factors.csv`) holds published values**: DESNZ
+  2024 conversion factors and IPCC 2006 defaults, `review_status=published`, each with
+  a source reference (see `docs/FACTOR_SOURCES.md`). The values are transcribed, not
+  independently verified, and carry the sources' own bases (DEFRA CO2e values use AR5).
+- **`illustrative_factors.csv` remains synthetic** (`source_org=SYNTHETIC`) and is used
+  by the test suite and synthetic demonstrations only.
 - New factors entered via the Emission Factor DB page are stored in the local
   SQLite database (`data/opencarbonchem.db`), not in the packaged CSV;
   SQLite database; they are not written to the packaged CSV.

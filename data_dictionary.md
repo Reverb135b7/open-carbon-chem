@@ -23,6 +23,12 @@ This document defines all data fields used throughout the OpenCarbonChem codebas
 
 ## 2. Emission Factor Fields
 
+Two packaged factor files exist: `factors/data/published_factors.csv` (default; DESNZ
+2024 and IPCC 2006 values, `review_status=published`) and
+`factors/data/illustrative_factors.csv` (synthetic test values,
+`review_status=illustrative`). Per-factor sources are tabulated in
+`docs/FACTOR_SOURCES.md`.
+
 | Field name               | Type                     | Description                                                                 |
 |--------------------------|--------------------------|-----------------------------------------------------------------------------|
 | factor_id                | `str` (required)         | Unique identifier for the emission factor                                    |

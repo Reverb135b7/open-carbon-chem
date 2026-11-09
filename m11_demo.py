@@ -4,7 +4,8 @@ Run:  python m11_demo.py
 
 Exercises the same package API the dashboard and CLI use: corporate inventory,
 product footprint, hotspots, Monte Carlo, a decarbonisation lever, and both
-report formats. All factors are the packaged illustrative (SYNTHETIC) set.
+report formats. Activity data are synthetic; factors are the packaged published
+(DESNZ 2024 / IPCC 2006) set.
 """
 
 from __future__ import annotations
@@ -29,7 +30,7 @@ def _factor(registry, category, substance, *, gas=None):
     return registry.find(
         activity_category=category,
         substance=substance,
-        geography="GLOBAL",
+        geography="GB",
         year=2024,
         gas=gas,
     )
@@ -191,7 +192,7 @@ def main() -> int:
     print(f"    {pdf_path.relative_to(ROOT)} ({pdf_path.stat().st_size:,} bytes)")
 
     print("\n" + "=" * 64)
-    print("Demo complete. All values use illustrative factors; not an ESG disclosure.")
+    print("Demo complete. Activities are synthetic; factors are published DESNZ/IPCC values.")
     return 0
 
 

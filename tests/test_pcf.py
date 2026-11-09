@@ -21,7 +21,7 @@ from opencarbonchem.core.exceptions import (
     IncompatibleUnitError,
     PCFError,
 )
-from opencarbonchem.factors import FactorRegistry
+from opencarbonchem.factors import FactorRegistry, illustrative_seed_path
 from opencarbonchem.pcf import (
     STAGE_CATALOGUE,
     AllocationRule,
@@ -40,7 +40,7 @@ PERIOD = dict(period_start=date(2024, 1, 1), period_end=date(2024, 12, 31))
 
 @pytest.fixture(scope="module")
 def registry() -> FactorRegistry:
-    return FactorRegistry.from_csv()
+    return FactorRegistry.from_csv(illustrative_seed_path())
 
 
 def activity(activity_id: str, category: str, substance: str, quantity: float, unit: str,

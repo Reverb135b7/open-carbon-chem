@@ -22,27 +22,32 @@ authorisation.
 
 ## Verification
 
-- `python -m pytest` → **219 passed**.
+- `python -m pytest` → **222 passed**.
 - `python -m compileall -q src app` → clean.
 - `ruff check src app --select F,E9` → no undefined names or unused imports.
 - CLI: `opencarbonchem calculate --activities data/activities_synthetic.csv --run-id demo --out build/reports`
-  writes an `.xlsx` and a `.pdf`; the totals (Scope 1 4,555,075 kg,
-  Scope 2 910,000 kg, Scope 3 82,000 kg) match the package API.
+  writes an `.xlsx` and a `.pdf`; the totals (Scope 1 4,550,678.6 kg,
+  Scope 2 423,082.5 kg, Scope 3 72,909.87 kg) match the package API.
 - Every dashboard page and every action button was executed through
   `streamlit.testing.v1.AppTest`; results were compared with the package API.
 
 ## Data
 
 - `data/activities_synthetic.csv` — 10 synthetic activity rows (Scope 1/2/3).
-- `src/opencarbonchem/factors/data/illustrative_factors.csv` — 14 factors, every
-  row `review_status=illustrative`, `source_org=SYNTHETIC`.
+- `src/opencarbonchem/factors/data/published_factors.csv` — 11 factors from the
+  DESNZ 2024 full set and IPCC 2006 defaults, every row `review_status=published`
+  with a document reference (see `docs/FACTOR_SOURCES.md`).
+- `src/opencarbonchem/factors/data/illustrative_factors.csv` — 14 synthetic factors
+  used by the test suite only (`review_status=illustrative`).
 
 Neither dataset is official and none of the output is an ESG disclosure.
 
 ## Known limitations
 
-1. **No real emission factors are bundled.** Real use requires importing a
-   published factor set with full provenance; the packaged rows are illustrative.
+1. **The packaged factor set covers one scenario, not every category.** It is a
+   published UK 2024 set plus IPCC defaults for the substances the demo uses; other
+   categories, regions and years need their own published rows. DESNZ's AR5
+   CO2e basis is retained as published (see `docs/FACTOR_SOURCES.md`).
 2. **Connectors (DEFRA / EPA / Ecoinvent) are stubs.** They return no live
    factors, make no claim of licensed access, and never feed a calculation.
 3. **Scope 2 market-based** totals require explicit contract/residual-mix

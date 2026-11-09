@@ -18,12 +18,12 @@ from opencarbonchem.analytics import (
     rank_emissions, pcf_hotspots, product_carbon_intensity,
 )
 from opencarbonchem.core.activity import ActivityRecord
-from opencarbonchem.factors import FactorRegistry
+from opencarbonchem.factors import FactorRegistry, default_seed_path
 from opencarbonchem.pcf import ProductDefinition, InventoryItem, calculate_pcf
 from opencarbonchem.core.calc import compute_emissions
 
 DATA = Path(__file__).parent.parent.parent / "data" / "raw" / "synthetic"
-DEFAULT_CSV = Path(__file__).parent.parent.parent / "src" / "opencarbonchem" / "factors" / "data" / "illustrative_factors.csv"
+DEFAULT_CSV = default_seed_path()
 
 
 st.set_page_config(page_title="OpenCarbonChem — Hotspot Analysis", page_icon="🔍", layout="wide")
@@ -58,15 +58,13 @@ with col_left:
                 ActivityRecord(activity_id="A-S3-002", scope=3, category="s3_cat04",
                                substance="road_freight", quantity=2000, unit="tkm"),
             ]
-            # geography="GLOBAL" keeps the GB grid factor from tying with the GLOBAL
-            # one; without it the lookup is correctly ambiguous and raises.
             results = [
                 compute_emissions(
                     a,
                     reg.find(
                         activity_category=a.category,
                         substance=a.substance,
-                        geography="GLOBAL",
+                        geography="GB",
                         year=2024,
                         gas=a.gas,
                     ),
@@ -114,14 +112,14 @@ with col_left:
                         activity=ActivityRecord(activity_id="A-RAW", scope=3, category="s3_cat01",
                                                 substance="paper", quantity=1000, unit="kg"),
                         factor=_load_seed().find(activity_category="s3_cat01", substance="paper",
-                                                 geography="GLOBAL", year=2024),
+                                                 geography="GB", year=2024),
                     ),
                     InventoryItem(
                         stage="manufacturing",
                         activity=ActivityRecord(activity_id="A-MFG", scope=1, category="stationary_combustion",
                                                 substance="natural_gas", quantity=500, unit="kWh", gas="CO2"),
                         factor=_load_seed().find(activity_category="stationary_combustion",
-                                                 substance="natural_gas", geography="GLOBAL",
+                                                 substance="natural_gas", geography="GB",
                                                  year=2024, gas="CO2"),
                     ),
                 ]

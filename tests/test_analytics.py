@@ -26,7 +26,7 @@ from opencarbonchem.core.activity import ActivityRecord
 from opencarbonchem.core.calc import compute_emissions
 from opencarbonchem.core.exceptions import AnalyticsError, UncertaintyError
 from opencarbonchem.core.gwp import DEFAULT_GWP_SET
-from opencarbonchem.factors import FactorRegistry
+from opencarbonchem.factors import FactorRegistry, illustrative_seed_path
 from opencarbonchem.pcf import InventoryItem, ProductDefinition, calculate_pcf
 
 pytestmark = pytest.mark.unit
@@ -36,7 +36,7 @@ PERIOD = dict(period_start=date(2024, 1, 1), period_end=date(2024, 12, 31))
 
 @pytest.fixture(scope="module")
 def registry() -> FactorRegistry:
-    return FactorRegistry.from_csv()
+    return FactorRegistry.from_csv(illustrative_seed_path())
 
 
 def act(activity_id: str, category: str, substance: str, quantity: float, unit: str,

@@ -3,7 +3,7 @@
 ## Current State (Phase 0)
 **Status**: All connectors (DEFRA, EPA, Ecoinvent) are **stub implementations** that return empty lists.
 **Purpose**: Satisfy Milestone 11 deliverable requirement; provide unified interface; enable future integration.
-**Data Source**: Synthetic datasets only (`review_status=illustrative`, `source_org=SYNTHETIC`).
+**Data Source**: packaged published factors (DESNZ 2024 / IPCC 2006); the connectors themselves fetch nothing.
 **Tests**: the full suite passes without network dependencies.
 
 ---
@@ -158,11 +158,11 @@
 
 ### Current Workflow
 ```text
-User loads synthetic data
+User loads synthetic activity data
 → Connectors return [] (stub)
-→ PCF calculated with illustrative factors
-→ Dashboard shows synthetic results
-→ review_status=illustrative labeled
+→ Calculation resolves packaged published factors (DESNZ 2024 / IPCC 2006)
+→ Dashboard shows results with factor provenance
+→ review_status=published recorded per row
 ```
 
 ### After Phase 1 Integration

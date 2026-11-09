@@ -168,6 +168,10 @@ class ExcelWorkbook:
             "Emissions (kg gas)",
             "CO2e (kg)",
             "Factor ID",
+            "Source",
+            "Reference",
+            "Review status",
+            "Uncertainty (%)",
         ]
         for col_idx, h in enumerate(headers, start=1):
             cell = ws.cell(row=2, column=col_idx, value=h)
@@ -194,7 +198,11 @@ class ExcelWorkbook:
             ws.cell(row=row_idx, column=12, value=r.co2e_kg).font = _DETAIL_FONT
             ws.cell(row=row_idx, column=12).number_format = "0.000"
             ws.cell(row=row_idx, column=13, value=r.factor_id).font = _DETAIL_FONT
-        _auto_width(ws, 1, 13)
+            ws.cell(row=row_idx, column=14, value=r.source_org).font = _DETAIL_FONT
+            ws.cell(row=row_idx, column=15, value=r.source_reference).font = _DETAIL_FONT
+            ws.cell(row=row_idx, column=16, value=r.review_status).font = _DETAIL_FONT
+            ws.cell(row=row_idx, column=17, value=r.uncertainty_pct).font = _DETAIL_FONT
+        _auto_width(ws, 1, 17)
 
     # -- reconciliation sheet --------------------------------------------- #
     def _write_reconciliation(self, ws) -> None:

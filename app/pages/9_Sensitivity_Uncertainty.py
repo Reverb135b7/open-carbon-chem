@@ -15,12 +15,12 @@ from opencarbonchem.analytics import (
     analyse_sensitivity, build_parameters, InputDistribution, run_monte_carlo,
 )
 from opencarbonchem.core.activity import ActivityRecord
-from opencarbonchem.factors import FactorRegistry
+from opencarbonchem.factors import FactorRegistry, default_seed_path
 from opencarbonchem.core.inventory import validate_entries
 from opencarbonchem.core.exceptions import AnalyticsError, UncertaintyError
 
 DATA = Path(__file__).parent.parent / "data" / "raw" / "synthetic"
-DEFAULT_CSV = Path(__file__).parent.parent.parent / "src" / "opencarbonchem" / "factors" / "data" / "illustrative_factors.csv"
+DEFAULT_CSV = default_seed_path()
 
 
 st.set_page_config(page_title="OpenCarbonChem — Sensitivity & Uncertainty", page_icon="📊", layout="wide")

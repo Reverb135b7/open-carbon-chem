@@ -126,7 +126,7 @@ with col_left:
             unit = st.text_input("Unit", value="kWh", help="e.g. kWh, L, kg, tkm")
         with c2:
             gas = st.text_input("Gas (optional)", placeholder="CO2")
-            geography = st.text_input("Geography", value="GLOBAL")
+            geography = st.text_input("Geography", value="GB")
             data_type = st.selectbox("Data type", options=["primary", "secondary"])
             period_start = st.date_input("Period start", value=date(2024, 1, 1))
             period_end = st.date_input("Period end", value=date(2024, 12, 31))
@@ -143,7 +143,7 @@ with col_left:
                     quantity=quantity,
                     unit=unit,
                     gas=gas or None,
-                    geography=geography or "GLOBAL",
+                    geography=geography or "GB",
                     data_type=data_type,
                     period_start=period_start,
                     period_end=period_end,

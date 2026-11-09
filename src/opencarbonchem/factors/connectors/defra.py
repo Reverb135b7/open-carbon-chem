@@ -124,15 +124,13 @@ class DefraConnector(FactorConnector):
         factors: list = []
 
         # Check if illustrative data file exists
-        illustrative_path = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-            "data",
-            "illustrative_factors.csv",
-        )
+        from ..registry import default_seed_path
 
-        if os.path.exists(illustrative_path):
+        seed_path = str(default_seed_path())
+
+        if os.path.exists(seed_path):
             try:
-                df = pd.read_csv(illustrative_path)
+                df = pd.read_csv(seed_path)
                 # Filter by year if column exists
                 if "year" in df.columns:
                     df = df[df["year"] == year]

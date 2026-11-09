@@ -75,7 +75,7 @@ with col_left:
         quantity = st.number_input("Quantity", min_value=0.0, step=1.0, format="%.2f")
         unit = st.text_input("Unit", value="kg", help="e.g. kg, tkm, pkm")
         gas = st.text_input("Gas (optional)", help="CO2e when the factor is already combined")
-        geography = st.text_input("Geography", value="GLOBAL")
+        geography = st.text_input("Geography", value="GB")
         data_type = st.selectbox("Data type", options=["primary", "secondary"])
         period_start = st.date_input("Period start", value=date(2024, 1, 1))
         period_end = st.date_input("Period end", value=date(2024, 12, 31))
@@ -92,7 +92,7 @@ with col_left:
                     quantity=quantity,
                     unit=unit,
                     gas=gas or None,
-                    geography=geography or "GLOBAL",
+                    geography=geography or "GB",
                     data_type=data_type,
                     period_start=period_start,
                     period_end=period_end,

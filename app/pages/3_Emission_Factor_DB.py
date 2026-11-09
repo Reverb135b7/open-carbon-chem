@@ -16,12 +16,12 @@ import streamlit as st
 import pandas as pd
 from pathlib import Path
 
-from opencarbonchem.factors import FactorRegistry
+from opencarbonchem.factors import FactorRegistry, default_seed_path
 from opencarbonchem.factors.models import EmissionFactor
 from opencarbonchem.database import CarbonDatabase
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_CSV = REPO_ROOT / "src" / "opencarbonchem" / "factors" / "data" / "illustrative_factors.csv"
+DEFAULT_CSV = default_seed_path()
 DB_PATH = REPO_ROOT / "data" / "opencarbonchem.db"
 
 
@@ -100,7 +100,7 @@ with col_right:
         value = st.number_input("Value", min_value=0.0001, step=0.1, format="%.4f")
         unit = st.text_input("Unit", help="e.g. kg CO2/kWh")
         gas = st.text_input("Gas", help="e.g. CO2; or CO2e if already combined")
-        geography = st.text_input("Geography", value="GLOBAL")
+        geography = st.text_input("Geography", value="GB")
         reporting_year = st.number_input("Reporting year", min_value=1900, value=2024, step=1)
         source_org = st.text_input("Source organisation", help="e.g. IPCC, DEFRA, SYNTHETIC")
         source_reference = st.text_input(
