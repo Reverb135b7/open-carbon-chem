@@ -69,7 +69,7 @@ Requires Python ≥ 3.11.
 from datetime import date
 from opencarbonchem import ActivityRecord, FactorRegistry, calculate_scope1
 
-registry = FactorRegistry.from_csv()   # packaged published factors (DESNZ 2024 / IPCC 2006)
+registry = FactorRegistry.from_csv()   # packaged published factors (DESNZ 2024-2026 / IPCC 2006)
 
 boiler = ActivityRecord(
     activity_id="ACT-001",
@@ -114,7 +114,7 @@ reports/    generated output
 ## Data provenance and honesty policy
 
 - The packaged factor CSV (`src/opencarbonchem/factors/data/published_factors.csv`)
-  holds **published** values (DESNZ 2024 full set, IPCC 2006 defaults), each with a
+  holds **published** values (DESNZ 2024, 2025 and 2026 sets, IPCC 2006 defaults), each with a
   document reference and `review_status=published`; see
   [`docs/FACTOR_SOURCES.md`](docs/FACTOR_SOURCES.md) for every value and caveat. The set
   covers 278 factors: fuels, refrigerants, process carbonates, purchased energy and
