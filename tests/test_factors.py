@@ -185,8 +185,8 @@ def test_activity_reporting_year_feeds_lookup(registry):
 @pytest.mark.integration
 def test_published_seed_is_the_default():
     registry = FactorRegistry.from_csv()
-    assert len(registry) == 187
-    assert {factor.reporting_year for factor in registry} == {2006, 2024, 2025}
+    assert len(registry) == 278
+    assert {factor.reporting_year for factor in registry} == {2006, 2024, 2025, 2026}
     for factor in registry:
         assert factor.review_status == "published"
         assert factor.source_org in {"DESNZ", "IPCC"}
@@ -210,6 +210,12 @@ def test_2025_vintage_supersedes_2024_for_2025_activity():
     assert find_2025.reporting_year == 2025
     assert find_2024.value == pytest.approx(0.20705)
     assert find_2025.value == pytest.approx(0.177)
+    find_2026 = registry.find(
+        activity_category="purchased_electricity", substance="grid_electricity",
+        geography="GB", year=2026, gas="CO2e",
+    )
+    assert find_2026.reporting_year == 2026
+    assert find_2026.value == pytest.approx(0.13096)
 
 
 @pytest.mark.integration

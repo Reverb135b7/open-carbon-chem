@@ -123,8 +123,14 @@
   "geography": "GB",
   "selector": {
    "l1": "Freighting goods",
-   "l2": "HGV (all diesel)",
-   "l3": "All HGVs",
+   "l2": [
+    "HGV (all diesel)",
+    "HGV (non-refrigerated, all diesel)"
+   ],
+   "l3": [
+    "All HGVs",
+    "Average non-refrigerated HGVs"
+   ],
    "l4": "",
    "col": "50% Laden",
    "uom": "tonne.km",
@@ -1307,8 +1313,14 @@
   "geography": "GB",
   "selector": {
    "l1": "Freighting goods",
-   "l2": "HGV (all diesel)",
-   "l3": "All HGVs",
+   "l2": [
+    "HGV (all diesel)",
+    "HGV (non-refrigerated, all diesel)"
+   ],
+   "l3": [
+    "All HGVs",
+    "Average non-refrigerated HGVs"
+   ],
    "l4": "",
    "col": "100% Laden",
    "uom": "tonne.km",

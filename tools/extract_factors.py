@@ -37,6 +37,8 @@ RELEASES = {
            "full set v1.1 (30 October 2024)", "2024-v1.1"),
     2025: ("2025 UK Government GHG Conversion Factors for Company Reporting, "
            "full set v1.0 (10 June 2025)", "2025-v1.0"),
+    2026: ("2026 UK Government GHG Conversion Factors for Company Reporting, "
+           "flat file v1.2 (revised 10 July 2026)", "2026-v1.2"),
 }
 
 # IPCC 2006 process factors are not in the DESNZ workbook; they are transcribed
