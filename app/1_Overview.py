@@ -41,7 +41,7 @@ def _report():
 
 
 def _demo_pcf() -> tuple[ProductDefinition, list[InventoryItem]]:
-    """Five life-cycle stages built from the illustrative seed factors (SYNTHETIC)."""
+    """Five life-cycle stages built from the packaged published factor set."""
     registry = _registry()
     product = ProductDefinition(
         pcf_id="OVERVIEW-PCF-001",
@@ -95,9 +95,9 @@ def _demo_pcf() -> tuple[ProductDefinition, list[InventoryItem]]:
             stage="waste",
             activity=ActivityRecord(
                 activity_id="OV-WST", scope=3, category="s3_cat05",
-                substance="mixed_waste", quantity=100, unit="kg",
+                substance="mixed_waste_landfill", quantity=100, unit="kg",
             ),
-            factor=registry.find(activity_category="s3_cat05", substance="mixed_waste", year=2024),
+            factor=registry.find(activity_category="s3_cat05", substance="mixed_waste_landfill", year=2024),
             excluded_from_corporate=True,
         ),
     ]

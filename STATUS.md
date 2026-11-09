@@ -22,7 +22,7 @@ authorisation.
 
 ## Verification
 
-- `python -m pytest` → **222 passed**.
+- `python -m pytest` → **234 passed**.
 - `python -m compileall -q src app` → clean.
 - `ruff check src app --select F,E9` → no undefined names or unused imports.
 - CLI: `opencarbonchem calculate --activities data/activities_synthetic.csv --run-id demo --out build/reports`
@@ -34,9 +34,11 @@ authorisation.
 ## Data
 
 - `data/activities_synthetic.csv` — 10 synthetic activity rows (Scope 1/2/3).
-- `src/opencarbonchem/factors/data/published_factors.csv` — 11 factors from the
+- `src/opencarbonchem/factors/data/published_factors.csv` — 88 factors from the
   DESNZ 2024 full set and IPCC 2006 defaults, every row `review_status=published`
-  with a document reference (see `docs/FACTOR_SOURCES.md`).
+  with a document reference: fuels, refrigerants, process carbonates, purchased
+  energy and T&D losses, materials, waste treatments, freight, travel and water
+  (catalogue in `docs/FACTOR_SOURCES.md`).
 - `src/opencarbonchem/factors/data/illustrative_factors.csv` — 14 synthetic factors
   used by the test suite only (`review_status=illustrative`).
 

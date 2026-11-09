@@ -19,6 +19,7 @@ import streamlit as st
 
 from opencarbonchem.core.activity import ActivityRecord, load_activities_csv
 from opencarbonchem.database import CarbonDatabase
+from opencarbonchem.factors import FactorRegistry
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DATA_CSV = REPO_ROOT / "data" / "activities_synthetic.csv"
@@ -37,6 +38,11 @@ def _open_db() -> CarbonDatabase:
     db = CarbonDatabase(DB_PATH)
     db.init_schema()
     return db
+
+
+@st.cache_resource
+def _registry() -> FactorRegistry:
+    return FactorRegistry.from_csv()
 
 
 # ---------- sidebar: import ---------- #
@@ -85,9 +91,9 @@ with st.sidebar:
     else:
         choice = st.selectbox(
             "Connector",
-            options=["none (illustrative seed)", "DEFRA (stub)", "EPA (stub)", "Ecoinvent (stub)"],
+            options=["none (packaged factors)", "DEFRA (stub)", "EPA (stub)", "Ecoinvent (stub)"],
         )
-        if choice != "none (illustrative seed)":
+        if choice != "none (packaged factors)":
             st.caption(
                 "Connectors are stubs: they return no live factors and never feed a "
                 "calculation. Real factor data must be imported with full provenance."
@@ -98,13 +104,22 @@ with st.sidebar:
             except Exception as exc:
                 st.caption(f"Connector error: {exc}")
         else:
-            st.caption("Using the packaged illustrative factors (SYNTHETIC).")
+            st.caption("Using the packaged published factors (DESNZ 2024 / IPCC 2006).")
 
 # ---------- main: add a record ---------- #
 col_left, col_right = st.columns([2, 1])
 
 with col_left:
     st.subheader("➕ Add an activity record")
+    with st.expander("Which categories and substances can I enter?"):
+        st.caption(
+            "Substances with a packaged factor are listed per category. Pick one of these "
+            "keys, or add a factor for a new substance on the Emission Factor DB page."
+        )
+        reg = _registry()
+        for category in sorted({row["category"] for row in reg.catalogue()}):
+            substances = reg.substances(category)
+            st.markdown(f"**`{category}`** — " + ", ".join(f"`{s}`" for s in substances))
     with st.form("add_activity", clear_on_submit=True):
         c1, c2 = st.columns(2)
         with c1:

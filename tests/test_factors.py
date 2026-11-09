@@ -185,13 +185,76 @@ def test_activity_reporting_year_feeds_lookup(registry):
 @pytest.mark.integration
 def test_published_seed_is_the_default():
     registry = FactorRegistry.from_csv()
-    assert len(registry) == 11
+    assert len(registry) == 88
     for factor in registry:
         assert factor.review_status == "published"
         assert factor.source_org in {"DESNZ", "IPCC"}
         assert factor.source_reference
         assert factor.version
         assert factor.notes
+
+
+@pytest.mark.integration
+def test_every_published_factor_has_a_parseable_unit():
+    from opencarbonchem.core.units import parse_unit
+
+    for factor in FactorRegistry.from_csv():
+        parse_unit(factor.unit)
+
+
+@pytest.mark.integration
+def test_published_seed_has_no_ambiguous_lookup_keys():
+    registry = FactorRegistry.from_csv()
+    keys = {}
+    for factor in registry:
+        key = (factor.activity_category, factor.substance, factor.geography,
+               factor.reporting_year, factor.gas)
+        keys.setdefault(key, []).append(factor.factor_id)
+    duplicates = {key: ids for key, ids in keys.items() if len(ids) > 1}
+    assert duplicates == {}
+
+    for factor in registry:
+        resolved = registry.find(
+            activity_category=factor.activity_category,
+            substance=factor.substance,
+            geography=factor.geography,
+            year=factor.reporting_year,
+            gas=factor.gas,
+        )
+        assert resolved.factor_id == factor.factor_id
+
+
+@pytest.mark.parametrize(
+    "category, substance, quantity, unit, gas, scope, expected_kg",
+    [
+        ("stationary_combustion", "coal_industrial", 1000, "kg", "CO2e", 1, 2399.43994),
+        ("fugitive_emissions", "r410a", 1, "kg", "CO2e", 1, 1924.0),
+        ("process_emissions", "dolomite", 1000, "kg", "CO2", 1, 477.32),
+        ("purchased_heat", "heat", 1000, "kWh", "CO2e", 2, 179.65),
+        ("s3_cat03", "electricity_td", 1000, "kWh", "CO2e", 3, 18.3),
+        ("s3_cat01", "water_supply", 100, "m3", "CO2e", 3, 15.311),
+        ("s3_cat01", "paper_mixed", 1000, "kg", "CO2e", 3, 1282.74402),
+        ("s3_cat04", "sea_container", 1000, "tkm", "CO2e", 3, 16.12),
+        ("s3_cat05", "paper_waste_landfill", 1000, "kg", "CO2e", 3, 1164.39015),
+        ("s3_cat06", "rail_national", 1000, "pkm", "CO2e", 3, 35.46),
+    ],
+)
+@pytest.mark.integration
+def test_published_factors_calculate_across_the_catalogue(
+    category, substance, quantity, unit, gas, scope, expected_kg
+):
+    from opencarbonchem.core.calc import compute_emissions
+
+    registry = FactorRegistry.from_csv()
+    activity = ActivityRecord(
+        activity_id="CAT-1", scope=scope, category=category, substance=substance,
+        quantity=quantity, unit=unit, gas=gas,
+    )
+    factor = registry.find(
+        activity_category=category, substance=substance, geography="GB", year=2024, gas=gas,
+    )
+    result = compute_emissions(activity, factor)
+    assert result.co2e_kg == pytest.approx(expected_kg, rel=1e-9)
 
 
 @pytest.mark.integration

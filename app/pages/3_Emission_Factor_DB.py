@@ -39,12 +39,13 @@ def _load_seed_registry() -> FactorRegistry:
 col_left, col_right = st.columns([2, 1])
 
 with col_left:
-    st.subheader("Packaged illustrative factors")
+    st.subheader("Packaged published factors")
     reg = _load_seed_registry()
     st.caption(f"Loaded {len(reg)} factors from `{DEFAULT_CSV.name}`.")
     st.markdown(
-        "**All rows are synthetic (review_status=illustrative, source_org=SYNTHETIC).** "
-        "Never present these as official emission factors."
+        "**DESNZ 2024 and IPCC 2006 values (`review_status=published`).** Each row carries "
+        "its document reference; see `docs/FACTOR_SOURCES.md` for the full table. Published "
+        "means transcribed, not independently verified."
     )
     # Show a table preview — only columns that matter for lookup
     preview_df = pd.DataFrame([
@@ -62,6 +63,12 @@ with col_left:
         for f in reg
     ])
     st.dataframe(preview_df, use_container_width=True, height=300)
+
+    with st.expander("Coverage by category"):
+        st.caption("Substances available for each activity category, with the factor unit.")
+        for category in sorted({row["category"] for row in reg.catalogue()}):
+            substances = reg.substances(category)
+            st.markdown(f"**`{category}`** — " + ", ".join(f"`{s}`" for s in substances))
 
     st.caption("Use the filters below to explore the registry.")
 

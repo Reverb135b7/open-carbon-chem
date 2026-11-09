@@ -93,6 +93,33 @@ class FactorRegistry:
         except KeyError:
             raise MissingFactorError(f"No factor with ID {factor_id!r}.") from None
 
+    # -- catalogue --------------------------------------------------------- #
+    def catalogue(self) -> list[dict[str, object]]:
+        """Distinct lookup keys in the registry, sorted for display."""
+        seen = {
+            (f.activity_category, f.substance, f.geography, f.reporting_year, f.gas, f.unit)
+            for f in self._factors.values()
+        }
+        return [
+            {
+                "category": category,
+                "substance": substance,
+                "geography": geography,
+                "year": year,
+                "gas": gas,
+                "unit": unit,
+            }
+            for category, substance, geography, year, gas, unit in sorted(seen)
+        ]
+
+    def substances(self, category: str) -> list[str]:
+        """Substance keys available for one activity category."""
+        wanted = _key(category)
+        return sorted({
+            f.substance for f in self._factors.values()
+            if _key(f.activity_category) == wanted
+        })
+
     # -- resolution -------------------------------------------------------- #
     def find(
         self,

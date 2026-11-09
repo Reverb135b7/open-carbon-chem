@@ -285,7 +285,7 @@ Rules:
 | 9 | Streamlit interface | **Done** (11 pages, Overview → Report Generation, thin clients over the package API; every page and every action button exercised through `streamlit.testing` AppTest, with the resulting totals checked against the package API) |
 | 10 | Reporting (PDF/Excel), documentation, full test suite | **Done** (Excel workbook with reconciliation guard, PDF executive summary, CLI entry point,
     LICENSE/CONTRIBUTING.md, methodology/assumptions/data-dictionary/provenance-policy/validation
-    protocol docs; 222 tests passing) |
+    protocol docs; 234 tests passing) |
 | 11 | Final integration and GitHub publication | **Done locally** (CI workflow, LICENSE, CONTRIBUTING, methodology/assumptions/data-dictionary/provenance/validation docs, notebooks/, reports/). Publishing to GitHub awaits the repository owner's authorisation. |
 
 At the end of every milestone: run the test suite, check calculation

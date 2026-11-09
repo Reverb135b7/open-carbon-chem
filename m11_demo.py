@@ -113,9 +113,9 @@ def demo_pcf(registry):
             stage="waste",
             activity=ActivityRecord(
                 activity_id="P-WST", scope=3, category="s3_cat05",
-                substance="mixed_waste", quantity=100, unit="kg",
+                substance="mixed_waste_landfill", quantity=100, unit="kg",
             ),
-            factor=_factor(registry, "s3_cat05", "mixed_waste"),
+            factor=_factor(registry, "s3_cat05", "mixed_waste_landfill"),
             excluded_from_corporate=True,
         ),
     ]
