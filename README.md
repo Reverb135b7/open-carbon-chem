@@ -136,6 +136,11 @@ reports/    generated output
   database schema, module specifications, error policy and milestone roadmap.
 - [`OpenCarbonChem Guide from Chatgpt.txt`](OpenCarbonChem%20Guide%20from%20Chatgpt.txt)
   — original project handover.
+- [`methodology_documentation.md`](methodology_documentation.md), [`assumptions_documentation.md`](assumptions_documentation.md),
+  [`data_dictionary.md`](data_dictionary.md), [`emission_factor_provenance_policy.md`](emission_factor_provenance_policy.md),
+  [`validation_protocol.md`](validation_protocol.md) — method, assumptions, data model and provenance rules.
+- [`CHANGELOG.md`](CHANGELOG.md) — release history.
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — development and contribution workflow.
 
 ## Roadmap (summary)
 
@@ -156,9 +161,3 @@ reports/    generated output
 ## License
 
 Apache-2.0 (see `LICENSE` and `pyproject.toml`).
-- CONTRIBUTING.md
-- methodology_documentation.md
-- assumptions_documentation.md
-- data_dictionary.md
-- emission_factor_provenance_policy.md
-- validation_protocol.md
